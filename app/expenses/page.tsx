@@ -67,14 +67,14 @@ async function getExpenses(shopId: string) {
       category,
       expense_date,
       created_at,
-      shifts ( shift_number )
+      shifts ( shift_number, responsible_name )
     `)
     .eq("shop_id", shopId)
     .order("expense_date", { ascending: false })
     .order("created_at", { ascending: false });
 
   return (data ?? []).map(
-    (row: Database["public"]["Tables"]["expenses"]["Row"] & { shifts: { shift_number: number } | null }) => ({
+    (row: Database["public"]["Tables"]["expenses"]["Row"] & { shifts: { shift_number: number; responsible_name: string } | null }) => ({
       id: row.id,
       shop_id: row.shop_id,
       shift_id: row.shift_id,
@@ -84,6 +84,7 @@ async function getExpenses(shopId: string) {
       expense_date: row.expense_date,
       created_at: row.created_at,
       shift_number: row.shifts?.shift_number ?? null,
+      responsible_name: row.shifts?.responsible_name ?? null,
     })
   );
 }

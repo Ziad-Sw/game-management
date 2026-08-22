@@ -30,7 +30,7 @@ export async function GET() {
         category,
         expense_date,
         created_at,
-        shifts ( shift_number )
+        shifts ( shift_number, responsible_name )
       `)
       .eq("shop_id", shopId)
       .order("expense_date", { ascending: false })
@@ -45,7 +45,7 @@ export async function GET() {
     }
 
     const expenses = (data ?? []).map(
-      (row: Database["public"]["Tables"]["expenses"]["Row"] & { shifts: { shift_number: number } | null }) => ({
+      (row: Database["public"]["Tables"]["expenses"]["Row"] & { shifts: { shift_number: number; responsible_name: string } | null }) => ({
       id: row.id,
       shop_id: row.shop_id,
       shift_id: row.shift_id,
@@ -55,6 +55,7 @@ export async function GET() {
       expense_date: row.expense_date,
       created_at: row.created_at,
       shift_number: row.shifts?.shift_number ?? null,
+      responsible_name: row.shifts?.responsible_name ?? null,
     }));
 
     return NextResponse.json({ expenses });
@@ -159,6 +160,7 @@ export async function POST(request: NextRequest) {
         expense_date: data.expense_date,
         created_at: data.created_at,
         shift_number: null,
+        responsible_name: null,
       },
     });
   } catch (err) {

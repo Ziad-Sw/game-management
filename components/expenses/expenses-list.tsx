@@ -16,6 +16,7 @@ interface Expense {
   expense_date: string;
   created_at: string;
   shift_number: number | null;
+  responsible_name: string | null;
 }
 
 interface ExpensesListProps {
@@ -123,7 +124,7 @@ export default function ExpensesList({
         setExpenses(
           expenses.map((e) =>
             e.id === editingExpense.id
-              ? { ...result.expense, shift_number: e.shift_number }
+              ? { ...result.expense, shift_number: e.shift_number, responsible_name: e.responsible_name }
               : e
           )
         );
@@ -226,9 +227,7 @@ export default function ExpensesList({
                     {formatCurrency(Number(expense.amount))}
                   </td>
                   <td className="px-4 py-3 text-sm text-foreground-muted">
-                    {expense.shift_number
-                      ? `#${formatCount(expense.shift_number)}`
-                      : "—"}
+                    {expense.responsible_name || "—"}
                   </td>
                   {canEdit && (
                     <td className="px-4 py-3">
