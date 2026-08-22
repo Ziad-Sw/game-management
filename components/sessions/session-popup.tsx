@@ -442,6 +442,7 @@ export function SessionPopup({
         ]);
         setSelectedProductId("");
         setSelectedQuantity(1);
+        showToast("success", "تم إضافة المشروب بنجاح");
       } else {
         showToast("error", data.error || "فشل إضافة المشروب");
       }
