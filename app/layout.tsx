@@ -10,7 +10,7 @@ const ibmPlexArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "PS-System - نظام إدارة محلات الألعاب",
+  title: "Game Management - نظام إدارة محلات الألعاب",
   description: "نظام إدارة يومي لمحل بلايستيشن — أجهزة، بلياردو، ومشروبات",
   icons: {
     icon: "/logo-ps.svg",
