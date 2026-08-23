@@ -5,6 +5,7 @@ import { NumericInput } from "@/components/ui/numeric-input";
 import { useToast } from "@/components/ui/toast";
 import { formatCount, formatCurrency } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/time";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface Expense {
   id: string;
@@ -309,14 +310,10 @@ export default function ExpensesList({
                 <label className="block text-sm font-medium text-foreground mb-1">
                   التاريخ <span className="text-red-400">*</span>
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                  className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 text-right"
-                  dir="rtl"
-                  lang="ar"
-                  style={{ direction: "rtl", textAlign: "right" }}
+                  onChange={(value) => setFormDate(value)}
+                  className="text-right"
                 />
               </div>
             </div>
