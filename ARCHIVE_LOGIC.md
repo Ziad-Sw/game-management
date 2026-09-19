@@ -68,11 +68,11 @@ GET /api/archive/shifts
 لكل وردية، الإيرادات الإجمالية تُحسب كالتالي:
 
 ```
-total_revenue = SUM(sessions.calculated_cost) + SUM(sale_items.total_price)
+total_revenue = SUM(sessions.calculated_cost) + SUM(sale_items.total_price WHERE session_id IS NULL)
 ```
 
-- `sessions.calculated_cost` = تكلفة جلسات اللعب (تُحسَب عند إغلاق الجلسة بناءً على `billing_mode` والمدة/عدد الجيمات)
-- `sale_items.total_price` = إجمالي مبيعات المشروبات (الكمية × سعر الوحدة)
+- `sessions.calculated_cost` = تكلفة جلسات اللعب (تُحسَب عند إغلاق الجلسة بناءً على `billing_mode` والمدة/عدد الجيمات) — وتشمل بداخلها تكلفة أي مشروبات أُضيفت على الجلسة نفسها
+- `sale_items.total_price WHERE session_id IS NULL` = مبيعات المشروبات المستقلة عن أي جلسة فقط (الكمية × سعر الوحدة) — أي منتج مرتبط بجلسة (`session_id` غير فارغ) مُستبعَد عمدًا من هذا الجمع لأنه محسوب بالفعل داخل `calculated_cost` الخاص بجلسته، وإلا احتُسب مرتين
 
 هذا الحساب يتم في طبقة التطبيق (JavaScript) وليس في قاعدة البيانات، لأن Supabase nested select لا يدعم aggregation بسهولة.
 
@@ -311,7 +311,7 @@ GET /api/archive/shifts
     ↓
 shifts × sessions × sale_items × products
   ↓
-total_revenue = Σ(sessions.calculated_cost) + Σ(sale_items.total_price)
+total_revenue = Σ(sessions.calculated_cost) + Σ(sale_items.total_price WHERE session_id IS NULL)
   ↓
 CalendarGrid تعرض شبكة 6×5
   رقم i = days[i-1]

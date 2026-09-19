@@ -83,6 +83,7 @@ async function getArchiveShifts(shopId: string): Promise<ArchiveShift[]> {
       ),
       sale_items (
         id,
+        session_id,
         product_id,
         quantity,
         unit_price,
@@ -111,7 +112,7 @@ async function getArchiveShifts(shopId: string): Promise<ArchiveShift[]> {
       ) ?? 0;
     const saleItemsRevenue =
       row.sale_items?.reduce(
-        (sum, s) => sum + (Number(s.total_price) || 0),
+        (sum, s) => sum + (s.session_id == null ? Number(s.total_price) || 0 : 0),
         0
       ) ?? 0;
 

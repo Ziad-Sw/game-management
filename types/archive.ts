@@ -16,6 +16,7 @@ export interface ArchiveShiftSession {
 
 export interface ArchiveShiftSaleItem {
   id: string;
+  session_id: string | null;
   product_id: string;
   quantity: number;
   unit_price: number;

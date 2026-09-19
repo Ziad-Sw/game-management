@@ -39,9 +39,10 @@ export async function GET() {
           duration_hours,
           stations ( name, station_type )
         ),
-        sale_items (
-          id,
-          product_id,
+      sale_items (
+        id,
+        session_id,
+        product_id,
           quantity,
           unit_price,
           total_price,
@@ -72,7 +73,7 @@ export async function GET() {
         ) ?? 0;
       const saleItemsRevenue =
         row.sale_items?.reduce(
-          (sum, s) => sum + (Number(s.total_price) || 0),
+          (sum, s) => sum + (s.session_id == null ? Number(s.total_price) || 0 : 0),
           0
         ) ?? 0;
 
