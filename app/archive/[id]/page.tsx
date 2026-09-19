@@ -402,12 +402,12 @@ export default async function ShiftDetailPage({
           </div>
         </div>
 
-        {/* Total revenue summary card */}
+        {/* Total revenue summary card (net profit after expenses) */}
         <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
           <div className="flex items-center justify-between">
             <span className="text-lg font-semibold text-foreground">إجمالي الإيرادات</span>
             <span className="text-2xl font-bold text-primary">
-              {formatCurrency(shift.total_revenue)}
+              {formatCurrency(shift.total_revenue - (shift.expensesTotal ?? 0))}
             </span>
           </div>
         </div>
