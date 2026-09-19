@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import AuthenticatedShell from "@/components/layout/authenticated-shell";
 import { formatCurrency, formatCount } from "@/lib/format/number";
-import { formatDateTime, formatTime } from "@/lib/format/time";
+import { formatDate, formatDateTime, formatTime } from "@/lib/format/time";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   SESSION_COOKIE_NAME,
@@ -99,6 +99,7 @@ async function getShiftDetail(
         description,
         amount,
         category,
+        expense_date,
         shifts ( responsible_name )
       )
     `)
@@ -141,6 +142,7 @@ async function getShiftDetail(
       description: e.description,
       amount: Number(e.amount),
       category: e.category,
+      expense_date: e.expense_date,
       responsible_name: e.shifts?.responsible_name ?? null,
     })),
     total_revenue: sessionsCost + saleItemsRevenue,
@@ -352,6 +354,7 @@ export default async function ShiftDetailPage({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-foreground-muted/10">
+                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">التاريخ</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">الوصف</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">الفئة</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">المبلغ</th>
@@ -361,6 +364,9 @@ export default async function ShiftDetailPage({
                 <tbody>
                   {(shift.expenses ?? []).map((expense) => (
                     <tr key={expense.id} className="border-b border-foreground-muted/5">
+                      <td className="py-3 px-2 text-foreground">
+                        {formatDate(expense.expense_date)}
+                      </td>
                       <td className="py-3 px-2 text-foreground">
                         {expense.description}
                       </td>

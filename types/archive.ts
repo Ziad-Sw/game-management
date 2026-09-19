@@ -29,6 +29,7 @@ export interface ArchiveShiftExpenseRow {
   description: string;
   amount: number;
   category: string | null;
+  expense_date: string;
   shifts: { responsible_name: string } | null;
 }
 
@@ -37,6 +38,7 @@ export interface ArchiveShiftExpense {
   description: string;
   amount: number;
   category: string | null;
+  expense_date: string;
   responsible_name: string | null;
 }
 
