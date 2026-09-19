@@ -381,7 +381,7 @@ export default function BilliardSettingsForm({
           {/* ===== Combo / Triple ===== */}
           <div className="border-t border-foreground-muted/20 pt-6">
             <h3 className="text-md font-medium text-foreground mb-1">كومب — متولتة</h3>
-            <p className="text-xs text-foreground-muted mb-3">تسعير العروض للاعبَين. راجعه في /settings/billiard</p>
+            <p className="text-xs text-foreground-muted mb-3">تسعير العروض لثلاثة لاعبين. راجعه في /settings/billiard</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-foreground mb-1">جنيه/ساعة</label>

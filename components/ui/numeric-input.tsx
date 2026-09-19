@@ -25,7 +25,9 @@ export function NumericInput({
   disabled = false,
   className = "",
 }: NumericInputProps) {
-  const [mobileInput, setMobileInput] = useState("");
+  const [mobileInput, setMobileInput] = useState(() =>
+    value === 0 ? "" : String(value)
+  );
   const prevValueRef = useRef(value);
 
   const isTouch = useSyncExternalStore(
@@ -40,13 +42,9 @@ export function NumericInput({
 
   useEffect(() => {
     if (!isTouch) return;
-    const prev = prevValueRef.current;
     prevValueRef.current = value;
-    if (value === 0 && prev !== 0) {
-      setMobileInput("");
-    } else if (value !== 0 && prev === 0) {
-      setMobileInput(String(value));
-    }
+    const expected = value === 0 ? "" : String(value);
+    setMobileInput((current) => (current === expected ? current : expected));
   }, [value, isTouch]);
 
   const handleChange = useCallback(
