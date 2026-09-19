@@ -56,6 +56,18 @@ async function getOwnerName(shopId: string) {
 
 async function getExpenses(shopId: string) {
   const supabase = createAdminClient();
+
+  // Scope the list to the currently open shift only (same predicate as POST /api/expenses)
+  const { data: openShift } = await supabase
+    .from("shifts")
+    .select("id")
+    .eq("shop_id", shopId)
+    .eq("status", "open")
+    .limit(1)
+    .maybeSingle();
+
+  if (!openShift) return [];
+
   const { data } = await supabase
     .from("expenses")
     .select(`
@@ -70,6 +82,7 @@ async function getExpenses(shopId: string) {
       shifts ( shift_number, responsible_name )
     `)
     .eq("shop_id", shopId)
+    .eq("shift_id", openShift.id)
     .order("expense_date", { ascending: false })
     .order("created_at", { ascending: false });
 

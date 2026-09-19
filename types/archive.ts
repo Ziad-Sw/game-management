@@ -24,6 +24,22 @@ export interface ArchiveShiftSaleItem {
   products: { name: string } | null;
 }
 
+export interface ArchiveShiftExpenseRow {
+  id: string;
+  description: string;
+  amount: number;
+  category: string | null;
+  shifts: { responsible_name: string } | null;
+}
+
+export interface ArchiveShiftExpense {
+  id: string;
+  description: string;
+  amount: number;
+  category: string | null;
+  responsible_name: string | null;
+}
+
 export interface ArchiveShiftRow {
   id: string;
   shift_number: number;
@@ -35,6 +51,7 @@ export interface ArchiveShiftRow {
   users: { display_name: string } | null;
   sessions: ArchiveShiftSession[];
   sale_items: ArchiveShiftSaleItem[];
+  expenses?: ArchiveShiftExpenseRow[];
 }
 
 export interface ArchiveShift {
@@ -46,7 +63,9 @@ export interface ArchiveShift {
   opened_by_user_name: string | null;
   sessions: ArchiveShiftSession[];
   sale_items: ArchiveShiftSaleItem[];
+  expenses?: ArchiveShiftExpense[];
   total_revenue: number;
+  expensesTotal?: number;
 }
 
 export interface DayWithShifts {

@@ -93,6 +93,13 @@ async function getShiftDetail(
         unit_price,
         total_price,
         products ( name )
+      ),
+      expenses (
+        id,
+        description,
+        amount,
+        category,
+        shifts ( responsible_name )
       )
     `)
     .eq("shop_id", shopId)
@@ -114,6 +121,11 @@ async function getShiftDetail(
       (sum, s) => sum + (s.session_id == null ? Number(s.total_price) || 0 : 0),
       0
     ) ?? 0;
+  const expensesTotal =
+    row.expenses?.reduce(
+      (sum, e) => sum + (Number(e.amount) || 0),
+      0
+    ) ?? 0;
 
   return {
     id: row.id,
@@ -124,7 +136,15 @@ async function getShiftDetail(
     opened_by_user_name: row.users?.display_name ?? null,
     sessions: row.sessions ?? [],
     sale_items: row.sale_items ?? [],
+    expenses: (row.expenses ?? []).map((e) => ({
+      id: e.id,
+      description: e.description,
+      amount: Number(e.amount),
+      category: e.category,
+      responsible_name: e.shifts?.responsible_name ?? null,
+    })),
     total_revenue: sessionsCost + saleItemsRevenue,
+    expensesTotal,
   };
 }
 
@@ -317,6 +337,69 @@ export default async function ShiftDetailPage({
               </table>
             </div>
           )}
+        </div>
+
+        {/* Expenses */}
+        <div className="rounded-xl bg-surface-card p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            المصاريف ({formatCount((shift.expenses ?? []).length)})
+          </h2>
+
+          {(shift.expenses ?? []).length === 0 ? (
+            <p className="text-sm text-foreground-muted">لا توجد مصاريف في هذه الوردية.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-foreground-muted/10">
+                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">الوصف</th>
+                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">الفئة</th>
+                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">المبلغ</th>
+                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">المسؤول</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(shift.expenses ?? []).map((expense) => (
+                    <tr key={expense.id} className="border-b border-foreground-muted/5">
+                      <td className="py-3 px-2 text-foreground">
+                        {expense.description}
+                      </td>
+                      <td className="py-3 px-2 text-foreground-muted">
+                        {expense.category || "—"}
+                      </td>
+                      <td className="py-3 px-2 text-foreground font-medium">
+                        {formatCurrency(Number(expense.amount))}
+                      </td>
+                      <td className="py-3 px-2 text-foreground-muted">
+                        {expense.responsible_name || "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Total profit */}
+        <div className="rounded-xl bg-surface-card p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">
+            إجمالي الأرباح
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-lg bg-surface-page/50 p-4">
+              <p className="text-xs text-foreground-muted">الإجمالي قبل المصاريف</p>
+              <p className="mt-1 text-xl font-bold text-foreground">
+                {formatCurrency(shift.total_revenue)}
+              </p>
+            </div>
+            <div className="rounded-lg bg-surface-page/50 p-4">
+              <p className="text-xs text-foreground-muted">الإجمالي بعد المصاريف</p>
+              <p className="mt-1 text-xl font-bold text-primary">
+                {formatCurrency(shift.total_revenue - (shift.expensesTotal ?? 0))}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Total revenue summary card */}
