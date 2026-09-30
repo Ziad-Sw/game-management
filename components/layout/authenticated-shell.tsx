@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ToastProvider, useToast } from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/layout/sidebar";
 
 interface AuthenticatedUser {
@@ -108,18 +109,22 @@ function AuthenticatedShellContent({
                 هل أنت متأكد من تسجيل الخروج؟ مع تسجيل الخروج سيتم نقلك إلى صفحة تسجيل الدخول.
               </p>
               <div className="flex gap-3">
-                <button
+                <Button
+                  variant="secondary"
+                  size="md"
+                  fill
                   onClick={handleLogoutCancel}
-                  className="min-h-[44px] flex-1 rounded-lg border border-foreground-muted/20 bg-surface-page px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-card"
                 >
                   إلغاء
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
+                  size="md"
+                  fill
                   onClick={handleLogoutConfirm}
-                  className="min-h-[44px] flex-1 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20"
                 >
                   تسجيل الخروج
-                </button>
+                </Button>
               </div>
             </div>
           </div>

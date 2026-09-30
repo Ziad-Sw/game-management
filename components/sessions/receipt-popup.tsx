@@ -5,6 +5,7 @@ import { formatCurrency, formatCount } from "@/lib/format/number";
 import { formatTime } from "@/lib/format/time";
 import { Station, Session } from "@/types/database";
 import { useToast } from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
 import { calculateGameEntrySubtotal } from "@/lib/pricing/calculation";
 
 interface ReceiptPopupProps {
@@ -266,19 +267,18 @@ export function ReceiptPopup({
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-lg border border-foreground-muted/30 px-4 py-3 text-sm font-medium text-foreground hover:bg-surface-page"
-          >
+          <Button variant="ghost" size="lg" fill onClick={onClose}>
             إلغاء
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            fill
             onClick={handleConfirm}
             disabled={isConfirming}
-            className="flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-surface-page hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isConfirming ? "جاري القفل..." : "تأكيد القفل"}
-          </button>
+          </Button>
         </div>
         </div>
       </div>

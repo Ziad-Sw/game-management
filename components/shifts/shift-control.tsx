@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
 import { formatCount } from "@/lib/format/number";
 import { formatTime } from "@/lib/format/time";
 import { OpenShiftModal } from "./open-shift-modal";
@@ -131,24 +132,28 @@ export function ShiftControl({ canManageShifts = true }: ShiftControlProps) {
 
           <div>
             {currentShift ? (
-              <button
+              <Button
+                variant="custom"
+                size="sm"
                 onClick={() => {
                   setClosePressedAt(new Date().toISOString());
                   setIsCloseModalOpen(true);
                 }}
                 disabled={!canManageShifts}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-red-600 text-white hover:bg-red-700"
               >
                 إنهاء وردية
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
+                variant="custom"
+                size="sm"
                 onClick={() => setIsModalOpen(true)}
                 disabled={!canManageShifts}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 text-white hover:bg-blue-700"
               >
                 فتح وردية
-              </button>
+              </Button>
             )}
           </div>
         </div>

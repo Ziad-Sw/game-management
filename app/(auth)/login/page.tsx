@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ToastProvider, useToast } from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
 
 function LoginForm() {
   const { showToast } = useToast();
@@ -108,19 +109,25 @@ function LoginForm() {
           </div>
 
           <div className="text-right">
-            <button
+            <Button
+              variant="link"
+              size="none"
               type="button"
               onClick={handleForgotId}
-              className="text-sm text-primary hover:text-primary/80 transition-colors"
             >
               هل نسيت ال-ID؟
-            </button>
+            </Button>
           </div>
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            size="xl"
+            fullWidth
+            bold
+            transitionAll
             disabled={isLoading || !loginId.trim()}
-            className="w-full h-11 inline-flex items-center justify-center rounded-lg bg-primary hover:bg-primary/90 text-surface-page font-semibold text-sm transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100"
+            className="active:scale-[0.98] disabled:pointer-events-none disabled:active:scale-100"
           >
             {isLoading ? (
               <div className="flex items-center gap-2">
@@ -149,7 +156,7 @@ function LoginForm() {
             ) : (
               "دخول"
             )}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
