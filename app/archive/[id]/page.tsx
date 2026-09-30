@@ -221,7 +221,7 @@ export default async function ShiftDetailPage({
             </div>
             <div className="text-left">
               <p className="text-3xl font-bold text-primary">
-                {formatCurrency(shift.total_revenue)}
+                {formatCurrency(shift.total_revenue - (shift.expensesTotal ?? 0))}
               </p>
               <p className="text-xs text-foreground-muted mt-1">إجمالي الإيرادات</p>
             </div>

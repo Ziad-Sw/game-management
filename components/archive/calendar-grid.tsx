@@ -141,7 +141,7 @@ export default function CalendarGrid({ shifts }: CalendarGridProps) {
                       </span>
                     </div>
                     <span className="text-sm font-medium text-primary">
-                      {formatCurrency(shift.total_revenue)}
+                      {formatCurrency(shift.total_revenue - (shift.expensesTotal ?? 0))}
                     </span>
                   </div>
                 </Link>
@@ -184,7 +184,7 @@ export default function CalendarGrid({ shifts }: CalendarGridProps) {
                   </span>
                 </div>
                 <span className="text-sm font-medium text-primary whitespace-nowrap mr-3">
-                  {formatCurrency(shift.total_revenue)}
+                  {formatCurrency(shift.total_revenue - (shift.expensesTotal ?? 0))}
                 </span>
               </Link>
             ))}

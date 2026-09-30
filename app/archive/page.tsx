@@ -89,6 +89,14 @@ async function getArchiveShifts(shopId: string): Promise<ArchiveShift[]> {
         unit_price,
         total_price,
         products ( name )
+      ),
+      expenses (
+        id,
+        description,
+        amount,
+        category,
+        expense_date,
+        shifts ( responsible_name )
       )
     `)
     .eq("shop_id", shopId)
@@ -115,6 +123,11 @@ async function getArchiveShifts(shopId: string): Promise<ArchiveShift[]> {
         (sum, s) => sum + (s.session_id == null ? Number(s.total_price) || 0 : 0),
         0
       ) ?? 0;
+    const expensesTotal =
+      row.expenses?.reduce(
+        (sum, e) => sum + (Number(e.amount) || 0),
+        0
+      ) ?? 0;
 
     return {
       id: row.id,
@@ -125,7 +138,16 @@ async function getArchiveShifts(shopId: string): Promise<ArchiveShift[]> {
       opened_by_user_name: row.users?.display_name ?? null,
       sessions: row.sessions ?? [],
       sale_items: row.sale_items ?? [],
+      expenses: (row.expenses ?? []).map((e) => ({
+        id: e.id,
+        description: e.description,
+        amount: Number(e.amount),
+        category: e.category,
+        expense_date: e.expense_date,
+        responsible_name: e.shifts?.responsible_name ?? null,
+      })),
       total_revenue: sessionsCost + saleItemsRevenue,
+      expensesTotal,
     };
   });
 }
