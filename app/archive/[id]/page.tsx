@@ -357,7 +357,7 @@ export default async function ShiftDetailPage({
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">التاريخ</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">الوصف</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">الفئة</th>
-                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">المسؤول</th>
+                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">مسؤول الوردية</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">المبلغ</th>
                   </tr>
                 </thead>

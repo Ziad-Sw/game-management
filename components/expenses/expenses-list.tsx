@@ -204,7 +204,7 @@ export default function ExpensesList({
                 <th className="px-4 py-3 font-medium">التاريخ</th>
                 <th className="px-4 py-3 font-medium">الوصف</th>
                 <th className="px-4 py-3 font-medium">الفئة</th>
-                <th className="px-4 py-3 font-medium">الوردية</th>
+                <th className="px-4 py-3 font-medium">مسؤول الوردية</th>
                 <th className="px-4 py-3 font-medium">المبلغ</th>
                 {canEdit && <th className="px-4 py-3 font-medium"></th>}
               </tr>
