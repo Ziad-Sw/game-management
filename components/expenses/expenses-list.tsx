@@ -204,8 +204,8 @@ export default function ExpensesList({
                 <th className="px-4 py-3 font-medium">التاريخ</th>
                 <th className="px-4 py-3 font-medium">الوصف</th>
                 <th className="px-4 py-3 font-medium">الفئة</th>
-                <th className="px-4 py-3 font-medium">المبلغ</th>
                 <th className="px-4 py-3 font-medium">الوردية</th>
+                <th className="px-4 py-3 font-medium">المبلغ</th>
                 {canEdit && <th className="px-4 py-3 font-medium"></th>}
               </tr>
             </thead>
@@ -224,11 +224,11 @@ export default function ExpensesList({
                   <td className="px-4 py-3 text-sm text-foreground-muted">
                     {expense.category || "—"}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground font-medium">
-                    {formatCurrency(Number(expense.amount))}
-                  </td>
                   <td className="px-4 py-3 text-sm text-foreground-muted">
                     {expense.responsible_name || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground font-medium">
+                    {formatCurrency(Number(expense.amount))}
                   </td>
                   {canEdit && (
                     <td className="px-4 py-3">

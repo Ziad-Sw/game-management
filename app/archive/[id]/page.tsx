@@ -357,8 +357,8 @@ export default async function ShiftDetailPage({
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">التاريخ</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">الوصف</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">الفئة</th>
-                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">المبلغ</th>
                     <th className="text-right py-3 px-2 text-foreground-muted font-medium">المسؤول</th>
+                    <th className="text-right py-3 px-2 text-foreground-muted font-medium">المبلغ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -373,11 +373,11 @@ export default async function ShiftDetailPage({
                       <td className="py-3 px-2 text-foreground-muted">
                         {expense.category || "—"}
                       </td>
-                      <td className="py-3 px-2 text-foreground font-medium">
-                        {formatCurrency(Number(expense.amount))}
-                      </td>
                       <td className="py-3 px-2 text-foreground-muted">
                         {expense.responsible_name || "—"}
+                      </td>
+                      <td className="py-3 px-2 text-foreground font-medium">
+                        {formatCurrency(Number(expense.amount))}
                       </td>
                     </tr>
                   ))}
