@@ -7,6 +7,7 @@ import { Station, Session } from "@/types/database";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 import { calculateGameEntrySubtotal } from "@/lib/pricing/calculation";
 
 interface ReceiptPopupProps {
@@ -67,7 +68,7 @@ export function ReceiptPopup({
 }: ReceiptPopupProps) {
   const { showToast } = useToast();
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
+  const confirmMutation = useMutation();
 
   const fetchReceiptData = useCallback(async () => {
     try {
@@ -100,31 +101,29 @@ export function ReceiptPopup({
     loadReceipt();
   }, [fetchReceiptData]);
 
-  const handleConfirm = async () => {
-    setIsConfirming(true);
-    try {
-      const response = await fetch("/api/sessions/confirm-close", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: session.id,
-        }),
-      });
+  const handleConfirm = () => {
+    void confirmMutation.mutate({
+      action: async () => {
+        const response = await fetch("/api/sessions/confirm-close", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: session.id,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        showToast("success", "تم قفل الجلسة بنجاح");
-        onConfirm();
-      } else {
-        showToast("error", data.error || "فشل قفل الجلسة");
-      }
-    } catch (error) {
-      console.error("Failed to confirm close:", error);
-      showToast("error", "حدث خطأ أثناء قفل الجلسة");
-    } finally {
-      setIsConfirming(false);
-    }
+        if (!response.ok) {
+          throw new Error(data.error || "فشل قفل الجلسة");
+        }
+      },
+      context: "Failed to confirm close:",
+      successMessage: "تم قفل الجلسة بنجاح",
+      fallbackError: "حدث خطأ أثناء قفل الجلسة",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => onConfirm(),
+    });
   };
 
   if (!receiptData) {
@@ -276,9 +275,9 @@ export function ReceiptPopup({
             size="lg"
             fill
             onClick={handleConfirm}
-            disabled={isConfirming}
+            disabled={confirmMutation.isPending}
           >
-            {isConfirming ? "جاري القفل..." : "تأكيد القفل"}
+            {confirmMutation.isPending ? "جاري القفل..." : "تأكيد القفل"}
           </Button>
         </div>
         </div>

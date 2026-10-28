@@ -6,7 +6,9 @@ import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
-import { formatCount, formatCurrency } from "@/lib/format/number";
+import { Button } from "@/components/ui/button";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
+import { formatCurrency } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/time";
 import { DatePicker } from "@/components/ui/date-picker";
 
@@ -37,8 +39,9 @@ export default function ExpensesList({
   const [showModal, setShowModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  const saveMutation = useMutation();
+  const deleteMutation = useMutation();
 
   const [formDescription, setFormDescription] = useState("");
   const [formAmount, setFormAmount] = useState(0);
@@ -68,7 +71,7 @@ export default function ExpensesList({
     setEditingExpense(null);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!formDescription.trim()) {
       showToast("error", "الوصف مطلوب.");
       return;
@@ -85,96 +88,95 @@ export default function ExpensesList({
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const body: {
-        description: string;
-        amount: number;
-        expense_date: string;
-        category?: string;
-      } = {
-        description: formDescription.trim(),
-        amount,
-        expense_date: formDate,
-      };
+    void saveMutation.mutate({
+      action: async () => {
+        const body: {
+          description: string;
+          amount: number;
+          expense_date: string;
+          category?: string;
+        } = {
+          description: formDescription.trim(),
+          amount,
+          expense_date: formDate,
+        };
 
-      if (formCategory.trim()) {
-        body.category = formCategory.trim();
-      }
+        if (formCategory.trim()) {
+          body.category = formCategory.trim();
+        }
 
-      let response: Response;
-      if (editingExpense) {
-        response = await fetch(`/api/expenses/${editingExpense.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      } else {
-        response = await fetch("/api/expenses", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      }
+        let response: Response;
+        if (editingExpense) {
+          response = await fetch(`/api/expenses/${editingExpense.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        } else {
+          response = await fetch("/api/expenses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        }
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "فشل العملية");
-      }
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "فشل العملية");
+        }
 
-      const result = await response.json();
+        const result = await response.json();
+        return result.expense as Expense;
+      },
+      context: "Failed to save expense",
+      fallbackError: "حدث خطأ",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (expense) => {
+        if (editingExpense) {
+          setExpenses(
+            expenses.map((e) =>
+              e.id === editingExpense.id
+                ? { ...expense, shift_number: e.shift_number, responsible_name: e.responsible_name }
+                : e
+            )
+          );
+          showToast("success", "تم تحديث المصروف بنجاح");
+        } else {
+          setExpenses([expense, ...expenses]);
+          showToast("success", "تم إضافة المصروف بنجاح");
+        }
 
-      if (editingExpense) {
-        setExpenses(
-          expenses.map((e) =>
-            e.id === editingExpense.id
-              ? { ...result.expense, shift_number: e.shift_number, responsible_name: e.responsible_name }
-              : e
-          )
-        );
-        showToast("success", "تم تحديث المصروف بنجاح");
-      } else {
-        setExpenses([result.expense, ...expenses]);
-        showToast("success", "تم إضافة المصروف بنجاح");
-      }
-
-      handleCloseModal();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "حدث خطأ";
-      showToast("error", msg);
-    } finally {
-      setIsSaving(false);
-    }
+        handleCloseModal();
+      },
+    });
   };
 
   const handleDeleteClick = (id: string) => {
     setShowDeleteConfirm(id);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = () => {
     const id = showDeleteConfirm;
     if (!id) return;
 
     setShowDeleteConfirm(null);
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/expenses/${id}`, {
-        method: "DELETE",
-      });
+    void deleteMutation.mutate({
+      action: async () => {
+        const response = await fetch(`/api/expenses/${id}`, {
+          method: "DELETE",
+        });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "فشل الحذف");
-      }
-
-      setExpenses(expenses.filter((e) => e.id !== id));
-      showToast("success", "تم حذف المصروف بنجاح");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "حدث خطأ";
-      showToast("error", msg);
-    } finally {
-      setIsDeleting(false);
-    }
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "فشل الحذف");
+        }
+      },
+      context: "Failed to delete expense",
+      successMessage: "تم حذف المصروف بنجاح",
+      fallbackError: "حدث خطأ",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setExpenses(expenses.filter((e) => e.id !== id)),
+    });
   };
 
   const handleDeleteCancel = () => {
@@ -186,12 +188,14 @@ export default function ExpensesList({
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">المصاريف المسجلة</h2>
         {canEdit && (
-          <button
+          <Button
+            variant="primary"
+            size="none"
+            className="min-h-[44px] px-5 py-2"
             onClick={handleOpenAdd}
-            className="min-h-[44px] rounded-lg bg-primary px-5 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90"
           >
             + إضافة مصروف
-          </button>
+          </Button>
         )}
       </div>
 
@@ -319,20 +323,19 @@ export default function ExpensesList({
             </div>
 
             <div className="mt-6 flex gap-3">
-              <button
-                onClick={handleCloseModal}
-                className="flex-1 min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-card"
-              >
+              <Button variant="secondary" size="md" fill onClick={handleCloseModal}>
                 إلغاء
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                fill
                 onClick={handleSave}
-                disabled={isSaving}
-                className="flex-1 min-h-[44px] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={saveMutation.isPending}
               >
-              {isSaving ? "جاري الحفظ..." : editingExpense ? "تحديث" : "إضافة"}
-            </button>
-          </div>
+                {saveMutation.isPending ? "جاري الحفظ..." : editingExpense ? "تحديث" : "إضافة"}
+              </Button>
+            </div>
         </Modal>
       )}
 
@@ -340,10 +343,10 @@ export default function ExpensesList({
         <ConfirmDialog
           title="تأكيد الحذف"
           message="هل أنت متأكد من حذف هذا المصروف؟ لا يمكن التراجع عن هذا الإجراء."
-          confirmLabel={isDeleting ? "جاري..." : "حذف"}
+          confirmLabel={deleteMutation.isPending ? "جاري..." : "حذف"}
           onConfirm={handleDeleteConfirm}
           onCancel={handleDeleteCancel}
-          confirmDisabled={isDeleting}
+          confirmDisabled={deleteMutation.isPending}
         />
       )}
     </div>

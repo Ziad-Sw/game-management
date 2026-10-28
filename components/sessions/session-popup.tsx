@@ -11,6 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { ModeToggle } from "./mode-toggle";
 import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 
 interface SessionPopupProps {
   station: Station;
@@ -30,7 +32,6 @@ export function SessionPopup({
   const { showToast } = useToast();
   const [mode, setMode] = useState<"single" | "multi">("single");
   const [billingMode, setBillingMode] = useState<BillingMode>("time");
-  const [isStarting, setIsStarting] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
@@ -43,7 +44,6 @@ export function SessionPopup({
     width: number;
   } | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
   const [removingEntryId, setRemovingEntryId] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState<string>("");
@@ -68,9 +68,6 @@ export function SessionPopup({
   const [newEntryPlayType, setNewEntryPlayType] = useState<PlayType>("normal");
   const [newEntryPlaySubtype, setNewEntryPlaySubtype] = useState<PlaySubtype>("single");
   const [newEntryGamesCount, setNewEntryGamesCount] = useState(1);
-  const [isAddingGameEntry, setIsAddingGameEntry] = useState(false);
-  const [isSavingGames, setIsSavingGames] = useState(false);
-  const [isPreviewingClose, setIsPreviewingClose] = useState(false);
 
   // Billiard start-session play_type/subtype (used when creating a billiard+time session)
   const [startPlayType, setStartPlayType] = useState<PlayType>("normal");
@@ -87,8 +84,17 @@ export function SessionPopup({
   const [startStationGamesCount, setStartStationGamesCount] = useState(0);
   const [newStationEntryMode, setNewStationEntryMode] = useState<PricingMode>("single");
   const [newStationEntryGamesCount, setNewStationEntryGamesCount] = useState(1);
-  const [isAddingStationGameEntry, setIsAddingStationGameEntry] = useState(false);
   const [removingStationEntryId, setRemovingStationEntryId] = useState<string | null>(null);
+
+  const startMutation = useMutation();
+  const removeProductMutation = useMutation();
+  const removeGameEntryMutation = useMutation();
+  const addProductMutation = useMutation();
+  const saveGamesMutation = useMutation();
+  const addStationEntryMutation = useMutation();
+  const removeStationEntryMutation = useMutation();
+  const addGameEntryMutation = useMutation();
+  const previewCloseMutation = useMutation();
 
   const activeBillingMode = activeSession?.billing_mode ?? billingMode;
   const isGameBased = activeBillingMode === "games";
@@ -275,31 +281,34 @@ export function SessionPopup({
   }, [activeSession]);
 
   const handleStartSession = async () => {
-    setIsStarting(true);
-    try {
-      const body: Record<string, unknown> = {
-        station_id: station.id,
-        billing_mode: billingMode,
-      };
+    await startMutation.mutate({
+      action: async () => {
+        const body: Record<string, unknown> = {
+          station_id: station.id,
+          billing_mode: billingMode,
+        };
 
-      if (station.station_type === "billiard") {
-        if (billingMode === "time") {
-          body.play_type = startPlayType;
-          body.play_subtype = startPlaySubtype;
+        if (station.station_type === "billiard") {
+          if (billingMode === "time") {
+            body.play_type = startPlayType;
+            body.play_subtype = startPlaySubtype;
+          }
+        } else if (billingMode === "time") {
+          body.mode = mode;
         }
-      } else if (billingMode === "time") {
-        body.mode = mode;
-      }
 
-      const response = await fetch("/api/sessions/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+        const response = await fetch("/api/sessions/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
+        if (!response.ok) {
+          throw new Error(data.error || "فشل بدء الجلسة");
+        }
+
         let hasAutoEntry = false;
 
         if (
@@ -355,220 +364,225 @@ export function SessionPopup({
           showToast("success", "تم بدء الجلسة بنجاح");
         }
         onSessionStarted();
-      } else {
-        showToast("error", data.error || "فشل بدء الجلسة");
-      }
-    } catch (error) {
-      console.error("Failed to start session:", error);
-      showToast("error", "حدث خطأ أثناء بدء الجلسة");
-    } finally {
-      setIsStarting(false);
-    }
+      },
+      context: "Failed to start session:",
+      fallbackError: "حدث خطأ أثناء بدء الجلسة",
+      getErrorMessage: errorMessageFrom,
+    });
   };
 
   const handleRemoveProduct = async (saleItemId: string) => {
     setRemovingItemId(saleItemId);
-    try {
-      const response = await fetch(
-        `/api/sessions/remove-product?sale_item_id=${saleItemId}`,
-        { method: "DELETE" }
-      );
+    await removeProductMutation.mutate({
+      action: async () => {
+        const response = await fetch(
+          `/api/sessions/remove-product?sale_item_id=${saleItemId}`,
+          { method: "DELETE" }
+        );
 
-      if (response.ok) {
-        setSaleItems((prev) => prev.filter((item) => item.id !== saleItemId));
-        showToast("success", "تم حذف المشروب بنجاح");
-      } else {
-        const data = await response.json();
-        showToast("error", data.error || "فشل حذف المشروب");
-      }
-    } catch (error) {
-      console.error("Failed to remove product:", error);
-      showToast("error", "حدث خطأ أثناء حذف المشروب");
-    } finally {
-      setRemovingItemId(null);
-    }
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "فشل حذف المشروب");
+        }
+      },
+      context: "Failed to remove product:",
+      successMessage: "تم حذف المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء حذف المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () =>
+        setSaleItems((prev) => prev.filter((item) => item.id !== saleItemId)),
+    });
+    setRemovingItemId(null);
   };
 
   const handleRemoveGameEntry = async (entryId: string) => {
     setRemovingEntryId(entryId);
-    try {
-      const response = await fetch(
-        `/api/sessions/remove-game-entry?entry_id=${entryId}`,
-        { method: "DELETE" }
-      );
+    await removeGameEntryMutation.mutate({
+      action: async () => {
+        const response = await fetch(
+          `/api/sessions/remove-game-entry?entry_id=${entryId}`,
+          { method: "DELETE" }
+        );
 
-      if (response.ok) {
-        setGameEntries((prev) => prev.filter((e) => e.id !== entryId));
-        showToast("success", "تم حذف إدخال الجيم بنجاح");
-      } else {
-        const data = await response.json();
-        showToast("error", data.error || "فشل حذف إدخال الجيم");
-      }
-    } catch (error) {
-      console.error("Failed to remove game entry:", error);
-      showToast("error", "حدث خطأ أثناء حذف إدخال الجيم");
-    } finally {
-      setRemovingEntryId(null);
-    }
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "فشل حذف إدخال الجيم");
+        }
+      },
+      context: "Failed to remove game entry:",
+      successMessage: "تم حذف إدخال الجيم بنجاح",
+      fallbackError: "حدث خطأ أثناء حذف إدخال الجيم",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () =>
+        setGameEntries((prev) => prev.filter((e) => e.id !== entryId)),
+    });
+    setRemovingEntryId(null);
   };
 
   const handleAddProduct = async () => {
     if (!selectedProductId || !activeSession) return;
 
-    setIsAddingProduct(true);
-    try {
-      const selectedProduct = products.find((p) => p.id === selectedProductId);
-      const response = await fetch("/api/sessions/add-product", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: activeSession.id,
-          product_id: selectedProductId,
-          quantity: selectedQuantity,
-        }),
-      });
+    await addProductMutation.mutate({
+      action: async () => {
+        const response = await fetch("/api/sessions/add-product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: activeSession.id,
+            product_id: selectedProductId,
+            quantity: selectedQuantity,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
+        if (!response.ok) {
+          throw new Error(data.error || "فشل إضافة المشروب");
+        }
+
+        return data.sale_item as {
+          id: string;
+          unit_price: number;
+          total_price: number;
+        };
+      },
+      context: "Failed to add product:",
+      successMessage: "تم إضافة المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء إضافة المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (saleItem) => {
+        const saleProduct = products.find((p) => p.id === selectedProductId);
         setSaleItems((prev) => [
           ...prev,
           {
-            id: data.sale_item.id,
-            product_name: selectedProduct?.name ?? "",
+            id: saleItem.id,
+            product_name: saleProduct?.name ?? "",
             quantity: selectedQuantity,
-            unit_price: Number(data.sale_item.unit_price),
-            total_price: Number(data.sale_item.total_price),
+            unit_price: Number(saleItem.unit_price),
+            total_price: Number(saleItem.total_price),
           },
         ]);
         setSelectedProductId("");
         setSelectedQuantity(1);
-        showToast("success", "تم إضافة المشروب بنجاح");
-      } else {
-        showToast("error", data.error || "فشل إضافة المشروب");
-      }
-    } catch (error) {
-      console.error("Failed to add product:", error);
-      showToast("error", "حدث خطأ أثناء إضافة المشروب");
-    } finally {
-      setIsAddingProduct(false);
-    }
+      },
+    });
   };
 
   const handleSaveGames = async () => {
     if (!activeSession) return;
 
-    setIsSavingGames(true);
-    try {
-      const response = await fetch("/api/sessions/update-games", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: activeSession.id,
-          games_count: gamesCountInput,
-        }),
-      });
+    await saveGamesMutation.mutate({
+      action: async () => {
+        const response = await fetch("/api/sessions/update-games", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: activeSession.id,
+            games_count: gamesCountInput,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        setGamesCount(gamesCountInput);
-        showToast("success", "تم تحديث عدد الجيمات");
-      } else {
-        showToast("error", data.error || "فشل تحديث عدد الجيمات");
-      }
-    } catch (error) {
-      console.error("Failed to update games count:", error);
-      showToast("error", "حدث خطأ أثناء تحديث عدد الجيمات");
-    } finally {
-      setIsSavingGames(false);
-    }
+        if (!response.ok) {
+          throw new Error(data.error || "فشل تحديث عدد الجيمات");
+        }
+      },
+      context: "Failed to update games count:",
+      successMessage: "تم تحديث عدد الجيمات",
+      fallbackError: "حدث خطأ أثناء تحديث عدد الجيمات",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setGamesCount(gamesCountInput),
+    });
   };
 
   const handleAddStationGameEntry = async () => {
     if (!activeSession) return;
-    setIsAddingStationGameEntry(true);
-    try {
-      const response = await fetch("/api/sessions/add-station-game-entry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: activeSession.id,
-          mode: newStationEntryMode,
-          games_count: newStationEntryGamesCount,
-        }),
-      });
 
-      const data = await response.json();
+    await addStationEntryMutation.mutate({
+      action: async () => {
+        const response = await fetch("/api/sessions/add-station-game-entry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: activeSession.id,
+            mode: newStationEntryMode,
+            games_count: newStationEntryGamesCount,
+          }),
+        });
 
-      if (response.ok) {
-        showToast("success", "تم إضافة الجيمات بنجاح");
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "فشل إضافة الجيمات");
+        }
+      },
+      context: "Failed to add station game entry:",
+      successMessage: "تم إضافة الجيمات بنجاح",
+      fallbackError: "حدث خطأ أثناء إضافة الجيمات",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => {
         setNewStationEntryGamesCount(1);
         fetchStationGameEntries(activeSession.id);
-      } else {
-        showToast("error", data.error || "فشل إضافة الجيمات");
-      }
-    } catch (error) {
-      console.error("Failed to add station game entry:", error);
-      showToast("error", "حدث خطأ أثناء إضافة الجيمات");
-    } finally {
-      setIsAddingStationGameEntry(false);
-    }
+      },
+    });
   };
 
   const handleRemoveStationGameEntry = async (entryId: string) => {
     setRemovingStationEntryId(entryId);
-    try {
-      const response = await fetch(
-        `/api/sessions/remove-station-game-entry?entry_id=${entryId}`,
-        { method: "DELETE" }
-      );
+    await removeStationEntryMutation.mutate({
+      action: async () => {
+        const response = await fetch(
+          `/api/sessions/remove-station-game-entry?entry_id=${entryId}`,
+          { method: "DELETE" }
+        );
 
-      if (response.ok) {
-        setStationGameEntries((prev) => prev.filter((e) => e.id !== entryId));
-        showToast("success", "تم حذف إدخال الجيم بنجاح");
-      } else {
-        const data = await response.json();
-        showToast("error", data.error || "فشل حذف إدخال الجيم");
-      }
-    } catch (error) {
-      console.error("Failed to remove station game entry:", error);
-      showToast("error", "حدث خطأ أثناء حذف إدخال الجيم");
-    } finally {
-      setRemovingStationEntryId(null);
-    }
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "فشل حذف إدخال الجيم");
+        }
+      },
+      context: "Failed to remove station game entry:",
+      successMessage: "تم حذف إدخال الجيم بنجاح",
+      fallbackError: "حدث خطأ أثناء حذف إدخال الجيم",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () =>
+        setStationGameEntries((prev) => prev.filter((e) => e.id !== entryId)),
+    });
+    setRemovingStationEntryId(null);
   };
 
   const handleAddGameEntry = async () => {
     if (!activeSession) return;
-    setIsAddingGameEntry(true);
-    try {
-      const response = await fetch("/api/sessions/add-game-entry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: activeSession.id,
-          games_count: newEntryGamesCount,
-          play_type: newEntryPlayType,
-          play_subtype: newEntryPlaySubtype,
-        }),
-      });
 
-      const data = await response.json();
+    await addGameEntryMutation.mutate({
+      action: async () => {
+        const response = await fetch("/api/sessions/add-game-entry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: activeSession.id,
+            games_count: newEntryGamesCount,
+            play_type: newEntryPlayType,
+            play_subtype: newEntryPlaySubtype,
+          }),
+        });
 
-      if (response.ok) {
-        showToast("success", "تم إضافة الجيمات بنجاح");
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "فشل إضافة الجيمات");
+        }
+      },
+      context: "Failed to add game entry:",
+      successMessage: "تم إضافة الجيمات بنجاح",
+      fallbackError: "حدث خطأ أثناء إضافة الجيمات",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => {
         setNewEntryGamesCount(1);
         fetchGameEntries(activeSession.id);
-      } else {
-        showToast("error", data.error || "فشل إضافة الجيمات");
-      }
-    } catch (error) {
-      console.error("Failed to add game entry:", error);
-      showToast("error", "حدث خطأ أثناء إضافة الجيمات");
-    } finally {
-      setIsAddingGameEntry(false);
-    }
+      },
+    });
   };
 
   const hasGamesChanged = gamesCountInput !== gamesCount;
@@ -576,29 +590,27 @@ export function SessionPopup({
   const handlePreviewClose = async () => {
     if (!activeSession) return;
 
-    setIsPreviewingClose(true);
-    try {
-      const response = await fetch("/api/sessions/preview-close", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: activeSession.id,
-        }),
-      });
+    await previewCloseMutation.mutate({
+      action: async () => {
+        const response = await fetch("/api/sessions/preview-close", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: activeSession.id,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        setShowReceipt(true);
-      } else {
-        showToast("error", data.error || "فشل حساب الإيصال");
-      }
-    } catch (error) {
-      console.error("Failed to preview close:", error);
-      showToast("error", "حدث خطأ أثناء حساب الإيصال");
-    } finally {
-      setIsPreviewingClose(false);
-    }
+        if (!response.ok) {
+          throw new Error(data.error || "فشل حساب الإيصال");
+        }
+      },
+      context: "Failed to preview close:",
+      fallbackError: "حدث خطأ أثناء حساب الإيصال",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setShowReceipt(true),
+    });
   };
 
   const isAvailable = !activeSession;
@@ -989,13 +1001,15 @@ export function SessionPopup({
                 </>
               )}
 
-              <button
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
                 onClick={handleStartSession}
-                disabled={isStarting}
-                className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-surface-page hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={startMutation.isPending}
               >
-                {isStarting ? "جاري البدء..." : "ابدأ الجلسة"}
-              </button>
+                {startMutation.isPending ? "جاري البدء..." : "ابدأ الجلسة"}
+              </Button>
             </div>
           ) : (
             /* Active Session - Add Products / End Session */
@@ -1023,13 +1037,14 @@ export function SessionPopup({
                           placeholder="أدخل عدد الجيمات"
                           className="flex-1"
                         />
-                        <button
+                        <Button
+                          variant="primary"
+                          size="sm"
                           onClick={handleSaveGames}
-                          disabled={!hasGamesChanged || isSavingGames}
-                          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={!hasGamesChanged || saveGamesMutation.isPending}
                         >
-                          {isSavingGames ? "جاري حفظ..." : "حفظ"}
-                        </button>
+                          {saveGamesMutation.isPending ? "جاري حفظ..." : "حفظ"}
+                        </Button>
                       </div>
                     </div>
                   ) : (
@@ -1096,13 +1111,14 @@ export function SessionPopup({
                             placeholder="أدخل عدد الجيمات"
                             className="flex-1 px-2 py-2 text-xs"
                           />
-                          <button
+                          <Button
+                            variant="primary"
+                            size="sm"
                             onClick={handleAddStationGameEntry}
-                            disabled={isAddingStationGameEntry}
-                            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page hover:bg-primary/90 disabled:opacity-50"
+                            disabled={addStationEntryMutation.isPending}
                           >
-                            {isAddingStationGameEntry ? "جاري..." : "إضافة جيمات"}
-                          </button>
+                            {addStationEntryMutation.isPending ? "جاري..." : "إضافة جيمات"}
+                          </Button>
                         </div>
                       </div>
                     </>
@@ -1278,13 +1294,14 @@ export function SessionPopup({
                         placeholder="أدخل عدد الجيمات"
                         className="flex-1 px-2 py-2 text-xs"
                       />
-                      <button
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={handleAddGameEntry}
-                        disabled={isAddingGameEntry}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page hover:bg-primary/90 disabled:opacity-50"
+                        disabled={addGameEntryMutation.isPending}
                       >
-                        {isAddingGameEntry ? "جاري..." : "إضافة جيمات"}
-                      </button>
+                        {addGameEntryMutation.isPending ? "جاري..." : "إضافة جيمات"}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1381,13 +1398,15 @@ export function SessionPopup({
                       placeholder="أدخل الكمية"
                       className="w-24"
                     />
-                    <button
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      fill
                       onClick={handleAddProduct}
-                      disabled={!selectedProductId || isAddingProduct}
-                      className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!selectedProductId || addProductMutation.isPending}
                     >
-                      {isAddingProduct ? "جاري الإضافة..." : "إضافة"}
-                    </button>
+                      {addProductMutation.isPending ? "جاري الإضافة..." : "إضافة"}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -1437,10 +1456,10 @@ export function SessionPopup({
               <div className="border-t border-foreground-muted/20 pt-4">
                 <button
                   onClick={handlePreviewClose}
-                  disabled={isPreviewingClose}
+                  disabled={previewCloseMutation.isPending}
                   className="w-full rounded-lg bg-red-500 px-4 py-3 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isPreviewingClose ? "جاري احتساب..." : isGameBased ? "إنهاء الجيمات" : "إنهاء الوقت"}
+                  {previewCloseMutation.isPending ? "جاري احتساب..." : isGameBased ? "إنهاء الجيمات" : "إنهاء الوقت"}
                 </button>
               </div>
             </div>
