@@ -24,6 +24,8 @@ function generateLoginId(): string {
  * POST /api/team/invite — invites a new staff member by email.
  * Body: { email: string, display_name?: string }
  * System auto-generates login_id; display_name accepted optionally, else derived from email prefix.
+ * If the email belongs to a deactivated member, the member is reactivated instead
+ * (fresh login_id, history preserved).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -68,21 +70,32 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // Check for duplicate email within the same shop
-    const { data: existingUser } = await supabase
+    // Check for an active member with this email within the same shop
+    const { data: activeMember } = await supabase
       .from("users")
       .select("id")
       .eq("shop_id", shopId)
       .eq("email", trimmedEmail)
+      .eq("is_active", true)
       .limit(1)
       .maybeSingle();
 
-    if (existingUser) {
+    if (activeMember) {
       return NextResponse.json(
         { error: "هذا البريد الإلكتروني مستخدم بالفعل في المحل." },
         { status: 409 }
       );
     }
+
+    // A deactivated member with this email is reactivated instead of re-created
+    const { data: deactivatedMember } = await supabase
+      .from("users")
+      .select("id")
+      .eq("shop_id", shopId)
+      .eq("email", trimmedEmail)
+      .eq("is_active", false)
+      .limit(1)
+      .maybeSingle();
 
     // Generate a unique login_id
     let loginId: string;
@@ -110,8 +123,43 @@ export async function POST(request: NextRequest) {
       }
     } while (!isUnique);
 
-    // Use the provided name when given, else derive from email prefix
-    const displayName = display_name?.trim() || trimmedEmail.split("@")[0];
+    const providedName = display_name?.trim() || null;
+
+    if (deactivatedMember) {
+      const reactivationUpdate: {
+        login_id: string;
+        is_active: boolean;
+        deactivated_at: null;
+        display_name?: string;
+      } = {
+        login_id: loginId,
+        is_active: true,
+        deactivated_at: null,
+      };
+      if (providedName) {
+        reactivationUpdate.display_name = providedName;
+      }
+
+      const { data: reactivatedUser, error: reactivateError } = await supabase
+        .from("users")
+        .update(reactivationUpdate)
+        .eq("id", deactivatedMember.id)
+        .select("id, login_id, display_name, email, role, permissions, is_active, created_at")
+        .maybeSingle();
+
+      if (reactivateError || !reactivatedUser) {
+        console.error("Failed to reactivate user:", reactivateError);
+        return NextResponse.json(
+          { error: "فشل إعادة تفعيل الموظف." },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ ok: true, user: reactivatedUser });
+    }
+
+    // New member: use the provided name if given, else derive from email prefix
+    const displayName = providedName ?? trimmedEmail.split("@")[0];
 
     // Create the user
     const { data: newUser, error: createError } = await supabase
