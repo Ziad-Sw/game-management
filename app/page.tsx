@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import AuthenticatedShell from "@/components/shared/authenticated-shell";
-import { ShiftControl } from "@/components/shifts/shift-control";
+import { ShiftControl } from "@/features/shifts/components/shift-control";
 import { StationsGrid } from "@/components/sessions/stations-grid";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserPermissions } from "@/lib/auth/permissions";
