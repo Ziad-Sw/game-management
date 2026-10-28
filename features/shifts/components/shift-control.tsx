@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { formatCount } from "@/lib/format/number";
 import { formatTime } from "@/lib/format/time";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 import { OpenShiftModal } from "./open-shift-modal";
 import { CloseShiftModal } from "./close-shift-modal";
 
@@ -31,7 +32,7 @@ export function ShiftControl({ canManageShifts = true }: ShiftControlProps) {
 
   const fetchCurrentShift = async () => {
     try {
-      const response = await fetch("/api/shifts/current");
+      const response = await fetch(ENDPOINTS.shifts.current);
       const data = await response.json();
       
       if (response.ok) {
@@ -52,7 +53,7 @@ export function ShiftControl({ canManageShifts = true }: ShiftControlProps) {
 
   const handleOpenShift = async (responsibleName: string) => {
     try {
-      const response = await fetch("/api/shifts/open", {
+      const response = await fetch(ENDPOINTS.shifts.open, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ responsible_name: responsibleName }),
@@ -75,7 +76,7 @@ export function ShiftControl({ canManageShifts = true }: ShiftControlProps) {
 
   const handleCloseShift = async (shiftId: string) => {
     try {
-      const response = await fetch("/api/shifts/close", {
+      const response = await fetch(ENDPOINTS.shifts.close, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ shift_id: shiftId }),

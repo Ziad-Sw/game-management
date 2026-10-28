@@ -5,6 +5,7 @@ import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
 import { useToast } from "@/components/ui/toast";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface PricingRule {
   id: string;
@@ -58,7 +59,7 @@ export default function PsSettingsForm({
       getErrorMessage: errorMessageFrom,
       onSuccess: () => setPsEnabled(!psEnabled),
       action: async () => {
-        const response = await fetch("/api/shops/update", {
+        const response = await fetch(ENDPOINTS.shops.update, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ps_enabled: !psEnabled }),
@@ -85,7 +86,7 @@ export default function PsSettingsForm({
       fallbackError: "حدث خطأ أثناء حفظ عدد الأجهزة",
       getErrorMessage: errorMessageFrom,
       action: async () => {
-        const response = await fetch("/api/shops/update", {
+        const response = await fetch(ENDPOINTS.shops.update, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ps_station_count: count }),
@@ -108,7 +109,7 @@ export default function PsSettingsForm({
       fallbackError: "حدث خطأ أثناء حفظ السعر",
       getErrorMessage: errorMessageFrom,
       action: async () => {
-        const response = await fetch("/api/pricing-rules/upsert", {
+        const response = await fetch(ENDPOINTS.pricingRules.upsert, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

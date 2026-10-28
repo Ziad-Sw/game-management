@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SectionCard } from "@/components/ui/section-card";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 import { formatCount } from "@/lib/format/number";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface TeamManagementFormProps {
   initialTeamMembers: User[];
@@ -58,7 +59,7 @@ export default function TeamManagementForm({
         setInviteEmail("");
       },
       action: async (): Promise<{ user: User }> => {
-        const response = await fetch("/api/team/invite", {
+        const response = await fetch(ENDPOINTS.team.invite, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: inviteEmail.trim() }),
@@ -116,7 +117,7 @@ export default function TeamManagementForm({
         cancelEditing();
       },
       action: async (): Promise<{ user: User }> => {
-        const response = await fetch(`/api/team/${editingUserId}`, {
+        const response = await fetch(ENDPOINTS.team.byId(editingUserId), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -151,7 +152,7 @@ export default function TeamManagementForm({
         setDeleteConfirmUserId(null);
       },
       action: async () => {
-        const response = await fetch(`/api/team/${deleteConfirmUserId}`, {
+        const response = await fetch(ENDPOINTS.team.byId(deleteConfirmUserId), {
           method: "DELETE",
         });
 

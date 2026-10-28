@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ToastProvider, useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import Sidebar from "@/components/shared/sidebar";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface AuthenticatedUser {
   login_id: string;
@@ -38,7 +39,7 @@ function AuthenticatedShellContent({
     showToast("warning", "جاري تسجيل الخروج...");
 
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch(ENDPOINTS.auth.logout, { method: "POST" });
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);

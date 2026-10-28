@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/section-card";
 import { useMutation } from "@/hooks/use-mutation";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface ShopData {
   id: string;
@@ -39,7 +40,7 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
       successMessage: "تم حفظ اسم المحل بنجاح",
       fallbackError: "حدث خطأ أثناء حفظ اسم المحل",
       action: async () => {
-        const response = await fetch("/api/shops/update", {
+        const response = await fetch(ENDPOINTS.shops.update, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: shopName.trim() }),
@@ -63,7 +64,7 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
       successMessage: "تم حفظ اسم صاحب المحل بنجاح",
       fallbackError: "حدث خطأ أثناء حفظ اسم صاحب المحل",
       action: async () => {
-        const response = await fetch("/api/shops/update", {
+        const response = await fetch(ENDPOINTS.shops.update, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ owner_name: ownerName.trim() }),

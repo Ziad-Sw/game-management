@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Station, Session } from "@/types/database";
 import { StationCard } from "./station-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface StationsGridProps {
   canManageSessions?: boolean;
@@ -16,7 +17,7 @@ export function StationsGrid({ canManageSessions = true }: StationsGridProps) {
 
   const fetchStations = useCallback(async () => {
     try {
-      const response = await fetch("/api/stations/list");
+      const response = await fetch(ENDPOINTS.stations.list);
       if (response.ok) {
         const data = await response.json();
         setStations(data.stations || []);
@@ -30,7 +31,7 @@ export function StationsGrid({ canManageSessions = true }: StationsGridProps) {
 
   const fetchActiveSessions = useCallback(async () => {
     try {
-      const response = await fetch("/api/sessions/active");
+      const response = await fetch(ENDPOINTS.sessions.active);
       if (response.ok) {
         const data = await response.json();
         const sessionsMap: Record<string, Session> = {};

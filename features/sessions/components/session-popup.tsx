@@ -13,6 +13,7 @@ import { ModeToggle } from "./mode-toggle";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface SessionPopupProps {
   station: Station;
@@ -107,7 +108,7 @@ export function SessionPopup({
   // Stable fetch helpers (only call state setters, so an empty dep array is safe)
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch("/api/products");
+      const response = await fetch(ENDPOINTS.products.list);
       if (response.ok) {
         const data = await response.json();
         setProducts(data.products || []);
@@ -178,7 +179,7 @@ export function SessionPopup({
 
   const fetchSaleItems = useCallback(async (sessionId: string) => {
     try {
-      const response = await fetch(`/api/sessions/sale-items?session_id=${sessionId}`);
+      const response = await fetch(`${ENDPOINTS.sessions.saleItems}?session_id=${sessionId}`);
       if (response.ok) {
         const data = await response.json();
         setSaleItems(data.items || []);
@@ -190,7 +191,7 @@ export function SessionPopup({
 
   const fetchGameEntries = useCallback(async (sessionId: string) => {
     try {
-      const response = await fetch(`/api/sessions/game-entries?session_id=${sessionId}`);
+      const response = await fetch(`${ENDPOINTS.sessions.gameEntries}?session_id=${sessionId}`);
       if (response.ok) {
         const data = await response.json();
         setGameEntries(data.entries || []);
@@ -202,7 +203,7 @@ export function SessionPopup({
 
   const fetchStationGameEntries = useCallback(async (sessionId: string) => {
     try {
-      const response = await fetch(`/api/sessions/station-game-entries?session_id=${sessionId}`);
+      const response = await fetch(`${ENDPOINTS.sessions.stationGameEntries}?session_id=${sessionId}`);
       if (response.ok) {
         const data = await response.json();
         const entries = data.entries || [];
@@ -297,7 +298,7 @@ export function SessionPopup({
           body.mode = mode;
         }
 
-        const response = await fetch("/api/sessions/start", {
+        const response = await fetch(ENDPOINTS.sessions.start, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -317,7 +318,7 @@ export function SessionPopup({
           startGamesPlayType !== null &&
           startGamesCount > 0
         ) {
-          const addRes = await fetch("/api/sessions/add-game-entry", {
+          const addRes = await fetch(ENDPOINTS.sessions.addGameEntry, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -340,7 +341,7 @@ export function SessionPopup({
           startStationMode !== null &&
           startStationGamesCount > 0
         ) {
-          const addRes = await fetch("/api/sessions/add-station-game-entry", {
+          const addRes = await fetch(ENDPOINTS.sessions.addStationGameEntry, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -376,7 +377,7 @@ export function SessionPopup({
     await removeProductMutation.mutate({
       action: async () => {
         const response = await fetch(
-          `/api/sessions/remove-product?sale_item_id=${saleItemId}`,
+          `${ENDPOINTS.sessions.removeProduct}?sale_item_id=${saleItemId}`,
           { method: "DELETE" }
         );
 
@@ -400,7 +401,7 @@ export function SessionPopup({
     await removeGameEntryMutation.mutate({
       action: async () => {
         const response = await fetch(
-          `/api/sessions/remove-game-entry?entry_id=${entryId}`,
+          `${ENDPOINTS.sessions.removeGameEntry}?entry_id=${entryId}`,
           { method: "DELETE" }
         );
 
@@ -424,7 +425,7 @@ export function SessionPopup({
 
     await addProductMutation.mutate({
       action: async () => {
-        const response = await fetch("/api/sessions/add-product", {
+        const response = await fetch(ENDPOINTS.sessions.addProduct, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -473,7 +474,7 @@ export function SessionPopup({
 
     await saveGamesMutation.mutate({
       action: async () => {
-        const response = await fetch("/api/sessions/update-games", {
+        const response = await fetch(ENDPOINTS.sessions.updateGames, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -501,7 +502,7 @@ export function SessionPopup({
 
     await addStationEntryMutation.mutate({
       action: async () => {
-        const response = await fetch("/api/sessions/add-station-game-entry", {
+        const response = await fetch(ENDPOINTS.sessions.addStationGameEntry, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -533,7 +534,7 @@ export function SessionPopup({
     await removeStationEntryMutation.mutate({
       action: async () => {
         const response = await fetch(
-          `/api/sessions/remove-station-game-entry?entry_id=${entryId}`,
+          `${ENDPOINTS.sessions.removeStationGameEntry}?entry_id=${entryId}`,
           { method: "DELETE" }
         );
 
@@ -557,7 +558,7 @@ export function SessionPopup({
 
     await addGameEntryMutation.mutate({
       action: async () => {
-        const response = await fetch("/api/sessions/add-game-entry", {
+        const response = await fetch(ENDPOINTS.sessions.addGameEntry, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -592,7 +593,7 @@ export function SessionPopup({
 
     await previewCloseMutation.mutate({
       action: async () => {
-        const response = await fetch("/api/sessions/preview-close", {
+        const response = await fetch(ENDPOINTS.sessions.previewClose, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

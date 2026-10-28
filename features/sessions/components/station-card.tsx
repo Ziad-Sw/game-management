@@ -5,6 +5,7 @@ import { Station, Session } from "@/types/database";
 import { SessionPopup } from "./session-popup";
 import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface StationCardProps {
   station: Station;
@@ -39,7 +40,7 @@ export function StationCard({
     if (editingName.trim() === "") return;
     
     try {
-      const response = await fetch(`/api/stations/update-name`, {
+      const response = await fetch(ENDPOINTS.stations.updateName, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

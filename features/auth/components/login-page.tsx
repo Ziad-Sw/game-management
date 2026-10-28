@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ToastProvider, useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 function LoginForm() {
   const { showToast } = useToast();
@@ -22,7 +23,7 @@ function LoginForm() {
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(ENDPOINTS.auth.login, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

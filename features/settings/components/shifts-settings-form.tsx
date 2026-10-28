@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface ShiftsSettingsFormProps {
   initialShiftsPerDay: number;
@@ -32,7 +33,7 @@ export default function ShiftsSettingsForm({
       fallbackError: "حدث خطأ أثناء حفظ الإعدادات",
       getErrorMessage: errorMessageFrom,
       action: async () => {
-        const response = await fetch("/api/shops/update", {
+        const response = await fetch(ENDPOINTS.shops.update, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ shifts_per_day: count }),

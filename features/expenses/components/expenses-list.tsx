@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 import { formatCurrency } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/time";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 import { DatePicker } from "@/components/ui/date-picker";
 
 interface Expense {
@@ -107,13 +108,13 @@ export default function ExpensesList({
 
         let response: Response;
         if (editingExpense) {
-          response = await fetch(`/api/expenses/${editingExpense.id}`, {
+          response = await fetch(ENDPOINTS.expenses.byId(editingExpense.id), {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });
         } else {
-          response = await fetch("/api/expenses", {
+          response = await fetch(ENDPOINTS.expenses.list, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
@@ -162,7 +163,7 @@ export default function ExpensesList({
     setShowDeleteConfirm(null);
     void deleteMutation.mutate({
       action: async () => {
-        const response = await fetch(`/api/expenses/${id}`, {
+        const response = await fetch(ENDPOINTS.expenses.byId(id), {
           method: "DELETE",
         });
 

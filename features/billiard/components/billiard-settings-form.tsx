@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface PricingRule {
   id: string;
@@ -90,7 +91,7 @@ export default function BilliardSettingsForm({
       getErrorMessage: errorMessageFrom,
       onSuccess: () => setBilliardEnabled(!billiardEnabled),
       action: async () => {
-        const response = await fetch("/api/shops/update", {
+        const response = await fetch(ENDPOINTS.shops.update, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ billiard_enabled: !billiardEnabled }),
@@ -117,7 +118,7 @@ export default function BilliardSettingsForm({
       fallbackError: "حدث خطأ أثناء حفظ عدد الطاولات",
       getErrorMessage: errorMessageFrom,
       action: async () => {
-        const response = await fetch("/api/shops/update", {
+        const response = await fetch(ENDPOINTS.shops.update, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ billiard_table_count: count }),
@@ -147,7 +148,7 @@ export default function BilliardSettingsForm({
       fallbackError: "حدث خطأ أثناء حفظ السعر",
       getErrorMessage: errorMessageFrom,
       action: async () => {
-        const response = await fetch("/api/pricing-rules/upsert", {
+        const response = await fetch(ENDPOINTS.pricingRules.upsert, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

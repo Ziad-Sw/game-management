@@ -7,6 +7,7 @@ import { SectionCard } from "@/components/ui/section-card";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format/number";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface Product {
   id: string;
@@ -60,7 +61,7 @@ export default function ProductsSettingsForm({
         setNewProductPrice(0);
       },
       action: async (): Promise<{ product: Product }> => {
-        const response = await fetch("/api/products", {
+        const response = await fetch(ENDPOINTS.products.list, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -96,7 +97,7 @@ export default function ProductsSettingsForm({
       getErrorMessage: errorMessageFrom,
       onSuccess: () => setProducts(products.filter((p) => p.id !== id)),
       action: async () => {
-        const response = await fetch(`/api/products/${id}`, {
+        const response = await fetch(ENDPOINTS.products.byId(id), {
           method: "DELETE",
         });
 
@@ -149,7 +150,7 @@ export default function ProductsSettingsForm({
         handleCancelEdit();
       },
       action: async (): Promise<{ product: Product }> => {
-        const response = await fetch(`/api/products/${editingProductId}`, {
+        const response = await fetch(ENDPOINTS.products.byId(editingProductId), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

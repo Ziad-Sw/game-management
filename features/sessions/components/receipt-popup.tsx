@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 import { calculateGameEntrySubtotal } from "@/features/sessions/lib/calculation";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
 
 interface ReceiptPopupProps {
   session: Session;
@@ -72,7 +73,7 @@ export function ReceiptPopup({
 
   const fetchReceiptData = useCallback(async () => {
     try {
-      const response = await fetch("/api/sessions/preview-close", {
+      const response = await fetch(ENDPOINTS.sessions.previewClose, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -104,7 +105,7 @@ export function ReceiptPopup({
   const handleConfirm = () => {
     void confirmMutation.mutate({
       action: async () => {
-        const response = await fetch("/api/sessions/confirm-close", {
+        const response = await fetch(ENDPOINTS.sessions.confirmClose, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
