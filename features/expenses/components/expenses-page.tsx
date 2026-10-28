@@ -8,7 +8,7 @@ import {
 } from "@/lib/auth/session";
 import { getUserPermissions } from "@/lib/auth/permissions";
 import type { Database } from "@/types";
-import ExpensesList from "@/components/expenses/expenses-list";
+import ExpensesList from "@/features/expenses/components/expenses-list";
 import { EmptyState } from "@/components/ui/empty-state";
 
 async function getCurrentUser() {
