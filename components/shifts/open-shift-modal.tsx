@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 
 interface OpenShiftModalProps {
   isOpen: boolean;
@@ -43,45 +46,44 @@ export function OpenShiftModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-neutral-900 rounded-lg p-6 w-full max-w-md border border-neutral-700">
-        <h2 className="text-xl font-bold text-white mb-4">فتح وردية جديدة</h2>
+    <Modal className="bg-surface-card mx-4 w-full max-w-md rounded-xl border border-foreground-muted/20 p-6 shadow-2xl">
+      <h2 className="text-xl font-bold text-foreground mb-4">فتح وردية جديدة</h2>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="responsibleName" className="block text-neutral-300 mb-2">
+            <label htmlFor="responsibleName" className="block text-foreground-muted mb-2">
               اسم المسؤول
             </label>
-            <input
+            <Input
               type="text"
               id="responsibleName"
               value={responsibleName}
               onChange={(e) => setResponsibleName(e.target.value)}
-              className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="أدخل اسم المسؤول"
               autoFocus
             />
           </div>
 
           <div className="flex gap-3 justify-end">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 bg-neutral-700 text-white rounded-lg hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               إلغاء
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="primary"
+              size="sm"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "جاري الفتح..." : "فتح وردية"}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

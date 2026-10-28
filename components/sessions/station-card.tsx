@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Station, Session } from "@/types/database";
 import { SessionPopup } from "./session-popup";
 import { useToast } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
 
 interface StationCardProps {
   station: Station;
@@ -139,7 +140,7 @@ export function StationCard({
         {/* Station Name */}
         {showNameEdit ? (
           <div className="mt-8" onClick={(e) => e.stopPropagation()}>
-            <input
+            <Input
               type="text"
               value={editingName}
               onChange={(e) => setEditingName(e.target.value)}
@@ -147,7 +148,6 @@ export function StationCard({
                 if (e.key === "Enter") handleNameSave();
                 if (e.key === "Escape") handleNameCancel();
               }}
-              className="w-full rounded-lg bg-surface-page px-3 py-2 text-foreground outline-none focus:ring-2 focus:ring-primary"
               autoFocus
             />
             <div className="mt-2 flex gap-2">

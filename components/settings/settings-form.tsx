@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
+import { SectionCard } from "@/components/ui/section-card";
 
 interface ShopData {
   id: string;
@@ -82,19 +84,17 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
   return (
     <div className="space-y-6">
       {/* Shop Name Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">اسم المحل</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          غيّر اسم المحل الذي يظهر في الشريط العلوي
-        </p>
+      <SectionCard
+        title="اسم المحل"
+        description="غيّر اسم المحل الذي يظهر في الشريط العلوي"
+      >
 
         <div className="mt-4 space-y-3">
-          <input
+          <Input
             type="text"
             value={shopName}
             onChange={(e) => setShopName(e.target.value)}
             disabled={!canEdit}
-            className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground placeholder-foreground-muted/50 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder="مثال: محل البلايستيشن"
           />
 
@@ -106,22 +106,20 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
             {isSavingShopName ? "جاري الحفظ..." : "حفظ اسم المحل"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Owner Name Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">اسم صاحب المحل</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          غيّر اسم صاحب المحل الذي يظهر في القائمة المنسدلة
-        </p>
+      <SectionCard
+        title="اسم صاحب المحل"
+        description="غيّر اسم صاحب المحل الذي يظهر في القائمة المنسدلة"
+      >
 
         <div className="mt-4 space-y-3">
-          <input
+          <Input
             type="text"
             value={ownerName}
             onChange={(e) => setOwnerName(e.target.value)}
             disabled={!canEdit}
-            className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground placeholder-foreground-muted/50 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
             placeholder="مثال: محمد أحمد"
           />
 
@@ -133,7 +131,7 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
             {isSavingOwnerName ? "جاري الحفظ..." : "حفظ اسم صاحب المحل"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* PlayStation Settings Card */}
       <Link

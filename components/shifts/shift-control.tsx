@@ -99,61 +99,59 @@ export function ShiftControl({ canManageShifts = true }: ShiftControlProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-        <div className="animate-pulse h-6 bg-neutral-700 rounded"></div>
+      <div className="bg-surface-card rounded-lg p-4 border border-foreground-muted/20">
+        <div className="animate-pulse h-6 bg-surface-page rounded"></div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
+      <div className="bg-surface-card rounded-lg p-4 border border-foreground-muted/20">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             {currentShift ? (
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
                   <span className="text-green-400 text-sm font-medium">وردية مفتوحة</span>
-                  <span className="text-neutral-400 text-sm">•</span>
-                  <span className="text-neutral-300 text-sm">
+                  <span className="text-foreground-muted text-sm">•</span>
+                  <span className="text-foreground text-sm">
                     {currentShift.responsible_name}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-neutral-400 text-sm">
+                <div className="flex items-center gap-3 text-foreground-muted text-sm">
                   <span>رقم {formatCount(currentShift.shift_number)}</span>
                   <span>•</span>
                   <span>من {formatTime(currentShift.opened_at)}</span>
                 </div>
               </div>
             ) : (
-              <div className="text-neutral-400 text-sm">لا توجد وردية مفتوحة</div>
+              <div className="text-foreground-muted text-sm">لا توجد وردية مفتوحة</div>
             )}
           </div>
 
           <div>
             {currentShift ? (
-              <Button
-                variant="custom"
-                size="sm"
-                onClick={() => {
-                  setClosePressedAt(new Date().toISOString());
-                  setIsCloseModalOpen(true);
-                }}
-                disabled={!canManageShifts}
-                className="bg-red-600 text-white hover:bg-red-700"
-              >
-                إنهاء وردية
-              </Button>
-            ) : (
-              <Button
-                variant="custom"
-                size="sm"
-                onClick={() => setIsModalOpen(true)}
-                disabled={!canManageShifts}
-                className="bg-blue-600 text-white hover:bg-blue-700"
-              >
-                فتح وردية
-              </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                setClosePressedAt(new Date().toISOString());
+                setIsCloseModalOpen(true);
+              }}
+              disabled={!canManageShifts}
+            >
+              إنهاء وردية
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsModalOpen(true)}
+              disabled={!canManageShifts}
+            >
+              فتح وردية
+            </Button>
             )}
           </div>
         </div>

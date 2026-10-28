@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { Modal } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { formatCount, formatCurrency } from "@/lib/format/number";
 import { formatDate } from "@/lib/format/time";
@@ -193,9 +196,7 @@ export default function ExpensesList({
       </div>
 
       {expenses.length === 0 ? (
-        <div className="rounded-xl bg-surface-card p-8 text-center">
-          <p className="text-foreground-muted">لا توجد مصاريف مسجلة حتى الآن.</p>
-        </div>
+        <EmptyState message="لا توجد مصاريف مسجلة حتى الآن." />
       ) : (
         <div className="overflow-x-auto rounded-xl bg-surface-card">
           <table className="w-full border-collapse text-right">
@@ -256,9 +257,8 @@ export default function ExpensesList({
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface-card rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-foreground-muted/20 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
+        <Modal className="bg-surface-card rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-foreground-muted/20 max-h-[90vh] overflow-y-auto">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
               {editingExpense ? "تعديل المصروف" : "إضافة مصروف جديد"}
             </h3>
 
@@ -330,37 +330,21 @@ export default function ExpensesList({
                 disabled={isSaving}
                 className="flex-1 min-h-[44px] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSaving ? "جاري الحفظ..." : editingExpense ? "تحديث" : "إضافة"}
-              </button>
-            </div>
+              {isSaving ? "جاري الحفظ..." : editingExpense ? "تحديث" : "إضافة"}
+            </button>
           </div>
-        </div>
+        </Modal>
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface-card rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-foreground-muted/20">
-            <h3 className="text-lg font-semibold text-foreground mb-2">تأكيد الحذف</h3>
-            <p className="text-sm text-foreground-muted mb-6">
-              هل أنت متأكد من حذف هذا المصروف؟ لا يمكن التراجع عن هذا الإجراء.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDeleteCancel}
-                className="flex-1 min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-card"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={isDeleting}
-                className="flex-1 min-h-[44px] rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isDeleting ? "جاري..." : "حذف"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="تأكيد الحذف"
+          message="هل أنت متأكد من حذف هذا المصروف؟ لا يمكن التراجع عن هذا الإجراء."
+          confirmLabel={isDeleting ? "جاري..." : "حذف"}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+          confirmDisabled={isDeleting}
+        />
       )}
     </div>
   );

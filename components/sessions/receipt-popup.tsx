@@ -6,6 +6,7 @@ import { formatTime } from "@/lib/format/time";
 import { Station, Session } from "@/types/database";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 import { calculateGameEntrySubtotal } from "@/lib/pricing/calculation";
 
 interface ReceiptPopupProps {
@@ -128,17 +129,17 @@ export function ReceiptPopup({
 
   if (!receiptData) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="rounded-xl bg-surface-card p-6">
-          <div className="text-center text-foreground-muted">جاري حساب الإيصال...</div>
-        </div>
-      </div>
+      <Modal className="rounded-xl bg-surface-card p-6">
+        <div className="text-center text-foreground-muted">جاري حساب الإيصال...</div>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div dir="ltr" className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-xl bg-surface-card shadow-none scrollbar-dark">
+    <Modal
+      dir="ltr"
+      className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-xl bg-surface-card shadow-none scrollbar-dark"
+    >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-surface-card px-6 pt-6 pb-0 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">إيصال الدفع</h2>
@@ -281,7 +282,6 @@ export function ReceiptPopup({
           </Button>
         </div>
         </div>
-      </div>
-    </div>
+      </Modal>
   );
 }

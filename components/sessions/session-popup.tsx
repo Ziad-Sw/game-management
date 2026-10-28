@@ -10,6 +10,7 @@ import { ReceiptPopup } from "./receipt-popup";
 import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { ModeToggle } from "./mode-toggle";
+import { Modal } from "@/components/ui/modal";
 
 interface SessionPopupProps {
   station: Station;
@@ -604,12 +605,11 @@ export function SessionPopup({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div
-            dir="ltr"
-            className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-xl bg-surface-card shadow-none scrollbar-dark"
-            onClick={(e) => e.stopPropagation()}
-          >
+      <Modal
+        dir="ltr"
+        className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-xl bg-surface-card shadow-none scrollbar-dark"
+        onClick={(e) => e.stopPropagation()}
+      >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-surface-card px-6 pt-6 pb-0 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground">
@@ -1447,8 +1447,7 @@ export function SessionPopup({
           )}
             </div>
           </div>
-        </div>
-      </div>
+        </Modal>
 
       {/* Receipt Popup */}
       {showReceipt && activeSession && (

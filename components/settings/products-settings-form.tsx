@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SectionCard } from "@/components/ui/section-card";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format/number";
 
@@ -168,11 +170,10 @@ export default function ProductsSettingsForm({
   return (
     <div className="space-y-6">
       {/* Add New Product */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">إضافة مشروب جديد</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          أضف مشروب جديد لقائمة المبيعات
-        </p>
+      <SectionCard
+        title="إضافة مشروب جديد"
+        description="أضف مشروب جديد لقائمة المبيعات"
+      >
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <input
@@ -200,14 +201,13 @@ export default function ProductsSettingsForm({
             {isAdding ? "جاري..." : "إضافة"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Products List */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">المشروبات الحالية</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          قائمة المشروبات المتاحة للبيع
-        </p>
+      <SectionCard
+        title="المشروبات الحالية"
+        description="قائمة المشروبات المتاحة للبيع"
+      >
 
         <div className="mt-4 space-y-3">
           {products.length === 0 ? (
@@ -287,32 +287,17 @@ export default function ProductsSettingsForm({
             ))
           )}
         </div>
-      </div>
+      </SectionCard>
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface-card rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-foreground-muted/20">
-            <h3 className="text-lg font-semibold text-foreground mb-2">تأكيد الحذف</h3>
-            <p className="text-sm text-foreground-muted mb-6">
-              هل أنت متأكد من حذف هذا المشروب؟ لا يمكن التراجع عن هذا الإجراء.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDeleteCancel}
-                className="flex-1 min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-card"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="flex-1 min-h-[44px] rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/20"
-              >
-                حذف
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="تأكيد الحذف"
+          message="هل أنت متأكد من حذف هذا المشروب؟ لا يمكن التراجع عن هذا الإجراء."
+          confirmLabel="حذف"
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
       )}
     </div>
   );

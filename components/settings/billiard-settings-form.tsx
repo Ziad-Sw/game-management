@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { SectionCard } from "@/components/ui/section-card";
 
 interface PricingRule {
   id: string;
@@ -175,11 +176,10 @@ export default function BilliardSettingsForm({
   return (
     <div className="space-y-6">
       {/* Toggle Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">تفعيل البلياردو</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          قم بتفعيل أو تعطيل خدمة البلياردو في المحل
-        </p>
+      <SectionCard
+        title="تفعيل البلياردو"
+        description="قم بتفعيل أو تعطيل خدمة البلياردو في المحل"
+      >
 
         <div className="mt-4 flex items-center gap-4">
           <button
@@ -198,14 +198,13 @@ export default function BilliardSettingsForm({
               : "معطّل — اضغط للتفعيل"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Table Count Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">عدد الطاولات</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          حدد عدد طاولات البلياردو الموجودة في المحل
-        </p>
+      <SectionCard
+        title="عدد الطاولات"
+        description="حدد عدد طاولات البلياردو الموجودة في المحل"
+      >
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <NumericInput
@@ -224,14 +223,13 @@ export default function BilliardSettingsForm({
             {isSavingTableCount ? "جاري..." : "حفظ"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Pricing Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">أسعار البلياردو</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          أسعار اللعب بالساعة وبعدد الجيمات لكل نوع لعب
-        </p>
+      <SectionCard
+        title="أسعار البلياردو"
+        description="أسعار اللعب بالساعة وبعدد الجيمات لكل نوع لعب"
+      >
 
         <div className="mt-6 space-y-8">
           {/* ===== Normal / Single ===== */}
@@ -333,7 +331,7 @@ export default function BilliardSettingsForm({
           {/* ===== Combo / Single ===== */}
           <div className="border-t border-foreground-muted/20 pt-6">
             <h3 className="text-md font-medium text-foreground mb-1">كومب — فردي</h3>
-            <p className="text-xs text-foreground-muted mb-3">تسعير العروض للاعب واحد. راجعه في /settings/billiard</p>
+            <p className="text-xs text-foreground-muted mb-3">تسعير العروض للاعبَين. راجعه في /settings/billiard</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-foreground mb-1">جنيه/ساعة</label>
@@ -474,7 +472,7 @@ export default function BilliardSettingsForm({
             </div>
           </div>
         </div>
-      </div>
+      </SectionCard>
     </div>
   );
 }

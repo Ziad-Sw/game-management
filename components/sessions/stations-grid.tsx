@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Station, Session } from "@/types/database";
 import { StationCard } from "./station-card";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface StationsGridProps {
   canManageSessions?: boolean;
@@ -82,9 +83,7 @@ export function StationsGrid({ canManageSessions = true }: StationsGridProps) {
 
   if (stations.length === 0) {
     return (
-      <div className="rounded-xl bg-surface-card p-8 text-center">
-        <p className="text-foreground-muted">لا توجد أجهزة مفعلة. قم بإضافة أجهزة من الإعدادات.</p>
-      </div>
+      <EmptyState message="لا توجد أجهزة مفعلة. قم بإضافة أجهزة من الإعدادات." />
     );
   }
 

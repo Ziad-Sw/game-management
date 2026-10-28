@@ -9,6 +9,7 @@ import {
 import { getUserPermissions } from "@/lib/auth/permissions";
 import type { Database } from "@/types";
 import ExpensesList from "@/components/expenses/expenses-list";
+import { EmptyState } from "@/components/ui/empty-state";
 
 async function getCurrentUser() {
   const cookieStore = await cookies();
@@ -123,9 +124,7 @@ export default async function ExpensesPage() {
         </div>
 
         {!canManageSettings ? (
-          <div className="rounded-xl bg-surface-card p-8 text-center">
-            <p className="text-foreground-muted">ليس لديك صلاحية لعرض المصاريف.</p>
-          </div>
+          <EmptyState message="ليس لديك صلاحية لعرض المصاريف." />
         ) : (
           <ExpensesList initialExpenses={expenses} canEdit={canManageSettings} />
         )}

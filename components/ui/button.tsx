@@ -8,8 +8,7 @@ export type ButtonVariant =
   | "ghost"
   | "danger"
   | "link"
-  | "toggle"
-  | "custom";
+  | "toggle";
 
 export type ButtonSize = "none" | "sm" | "md" | "lg" | "xl";
 
@@ -46,10 +45,6 @@ const VARIANT_CLASSES: Record<Exclude<ButtonVariant, "toggle">, string> = {
     "border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20",
   // Source pattern: login "forgot ID" text button.
   link: "text-primary hover:text-primary/80",
-  // Escape hatch for pre-token legacy colors (shift-control blue-600/red-600).
-  // Colors MUST come from className at the call site. Stage 4 replaces these
-  // call sites with token variants and then this option stays for emergencies.
-  custom: "",
 };
 
 function toggleClasses(selected: boolean): string {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { SectionCard } from "@/components/ui/section-card";
 import { useToast } from "@/components/ui/toast";
 
 interface ShiftsSettingsFormProps {
@@ -49,11 +50,10 @@ export default function ShiftsSettingsForm({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">عدد الورديات اليومية</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          حدد الحد الأقصى لعدد الورديات المسموح بها في اليوم الواحد (1-4)
-        </p>
+      <SectionCard
+        title="عدد الورديات اليومية"
+        description="حدد الحد الأقصى لعدد الورديات المسموح بها في اليوم الواحد (1-4)"
+      >
 
         <div className="mt-4 space-y-3">
           <div className="flex gap-2">
@@ -83,7 +83,7 @@ export default function ShiftsSettingsForm({
             </ul>
           </div>
         </div>
-      </div>
+      </SectionCard>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ToastProvider, useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 function LoginForm() {
   const { showToast } = useToast();
@@ -90,7 +91,7 @@ function LoginForm() {
             >
               تسجيل الدخول
             </label>
-            <input
+            <Input
               id="loginId"
               type="text"
               required
@@ -98,7 +99,6 @@ function LoginForm() {
               onChange={(e) => setLoginId(e.target.value)}
               disabled={isLoading}
               placeholder="أدخل معرف الدخول الخاص بك"
-              className="w-full h-11 px-4 rounded-lg bg-surface-page border border-foreground-muted/20 text-foreground placeholder:text-foreground-muted/40 focus:border-primary focus:outline-none transition-colors duration-150 disabled:opacity-50"
             />
             <p className="mt-2 text-xs text-foreground-muted">
               للتجربة، استخدم ID:{" "}

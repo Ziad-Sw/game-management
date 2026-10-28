@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ToastProvider, useToast } from "@/components/ui/toast";
-import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import Sidebar from "@/components/layout/sidebar";
 
 interface AuthenticatedUser {
@@ -102,32 +102,13 @@ function AuthenticatedShellContent({
         </main>
 
         {showLogoutConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-surface-card mx-4 w-full max-w-sm rounded-xl border border-foreground-muted/20 p-6 shadow-2xl">
-              <h3 className="mb-2 text-lg font-semibold text-foreground">تأكيد تسجيل الخروج</h3>
-              <p className="mb-6 text-sm text-foreground-muted">
-                هل أنت متأكد من تسجيل الخروج؟ مع تسجيل الخروج سيتم نقلك إلى صفحة تسجيل الدخول.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="secondary"
-                  size="md"
-                  fill
-                  onClick={handleLogoutCancel}
-                >
-                  إلغاء
-                </Button>
-                <Button
-                  variant="danger"
-                  size="md"
-                  fill
-                  onClick={handleLogoutConfirm}
-                >
-                  تسجيل الخروج
-                </Button>
-              </div>
-            </div>
-          </div>
+          <ConfirmDialog
+            title="تأكيد تسجيل الخروج"
+            message="هل أنت متأكد من تسجيل الخروج؟ مع تسجيل الخروج سيتم نقلك إلى صفحة تسجيل الدخول."
+            confirmLabel="تسجيل الخروج"
+            onConfirm={handleLogoutConfirm}
+            onCancel={handleLogoutCancel}
+          />
         )}
       </div>
     </ToastProvider>

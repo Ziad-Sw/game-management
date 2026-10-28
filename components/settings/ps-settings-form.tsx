@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { SectionCard } from "@/components/ui/section-card";
 import { useToast } from "@/components/ui/toast";
 
 interface PricingRule {
@@ -136,11 +137,10 @@ export default function PsSettingsForm({
   return (
     <div className="space-y-6">
       {/* Toggle Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">تفعيل {StationTypeLabel}</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          قم بتفعيل أو تعطيل خدمة {StationTypeLabel} في المحل
-        </p>
+      <SectionCard
+        title={`تفعيل ${StationTypeLabel}`}
+        description={`قم بتفعيل أو تعطيل خدمة ${StationTypeLabel} في المحل`}
+      >
 
         <div className="mt-4 flex items-center gap-4">
           <button
@@ -159,14 +159,13 @@ export default function PsSettingsForm({
               : "معطّل — اضغط للتفعيل"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Station Count Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">عدد الأجهزة</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          حدد عدد أجهزة {StationTypeLabel} الموجودة في المحل
-        </p>
+      <SectionCard
+        title="عدد الأجهزة"
+        description={`حدد عدد أجهزة ${StationTypeLabel} الموجودة في المحل`}
+      >
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <NumericInput
@@ -186,14 +185,13 @@ export default function PsSettingsForm({
             {isSavingStationCount ? "جاري..." : "حفظ"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Pricing Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">أسعار {StationTypeLabel}</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          أسعار اللعب بالساعة وبعدد الجيمات لكل نوع لعب
-        </p>
+      <SectionCard
+        title={`أسعار ${StationTypeLabel}`}
+        description="أسعار اللعب بالساعة وبعدد الجيمات لكل نوع لعب"
+      >
 
         <div className="mt-6 space-y-6">
           {/* Hourly Pricing */}
@@ -304,7 +302,7 @@ export default function PsSettingsForm({
             </div>
           </div>
         </div>
-      </div>
+      </SectionCard>
     </div>
   );
 }

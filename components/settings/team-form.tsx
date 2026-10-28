@@ -3,6 +3,9 @@
 import { useState } from "react";
 import type { User, StaffPermissions } from "@/types/database";
 import { useToast } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SectionCard } from "@/components/ui/section-card";
 import { formatCount } from "@/lib/format/number";
 
 interface TeamManagementFormProps {
@@ -157,20 +160,19 @@ export default function TeamManagementForm({
   return (
     <div className="space-y-6">
       {/* Invite Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">إضافة عضو جديد</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          أدخل البريد الإلكتروني للموظف لإرسال دعوة. النظام سيولّد معرّف دخول تلقائيًا.
-        </p>
+      <SectionCard
+        title="إضافة عضو جديد"
+        description="أدخل البريد الإلكتروني للموظف لإرسال دعوة. النظام سيولّد معرّف دخول تلقائيًا."
+      >
 
         <div className="mt-4 flex gap-2">
-          <input
+          <Input
             type="email"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleInvite(); }}
             disabled={!canEdit}
-            className="flex-1 min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground placeholder-foreground-muted/50 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1"
             placeholder="example@email.com"
             dir="ltr"
           />
@@ -183,7 +185,7 @@ export default function TeamManagementForm({
             {isInviting ? "جاري..." : "تأكيد"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Active Members Section */}
       <div className="rounded-xl bg-surface-card p-6">
@@ -204,12 +206,11 @@ export default function TeamManagementForm({
                       <label className="block text-sm font-medium text-foreground mb-1">
                         معرّف الدخول
                       </label>
-                      <input
+                      <Input
                         type="text"
                         value={editLoginId}
                         onChange={(e) => setEditLoginId(e.target.value)}
                         disabled={!canEdit}
-                        className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                         dir="ltr"
                       />
                     </div>
@@ -218,12 +219,11 @@ export default function TeamManagementForm({
                       <label className="block text-sm font-medium text-foreground mb-1">
                         الاسم
                       </label>
-                      <input
+                      <Input
                         type="text"
                         value={editDisplayName}
                         onChange={(e) => setEditDisplayName(e.target.value)}
                         disabled={!canEdit}
-                        className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                     </div>
 
@@ -231,12 +231,11 @@ export default function TeamManagementForm({
                       <label className="block text-sm font-medium text-foreground mb-1">
                         البريد الإلكتروني
                       </label>
-                      <input
+                      <Input
                         type="email"
                         value={editEmail}
                         onChange={(e) => setEditEmail(e.target.value)}
                         disabled={!canEdit}
-                        className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
                         dir="ltr"
                       />
                     </div>
@@ -341,32 +340,15 @@ export default function TeamManagementForm({
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmUserId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface-card rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-foreground-muted/20">
-            <h3 className="text-lg font-semibold text-foreground mb-2">تأكيد حذف العضو</h3>
-            <p className="text-sm text-foreground-muted mb-6">
-              هل أنت متأكد من حذف هذا العضو؟ العضو سيفقد صلاحية الدخول فورًا.
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirmUserId(null)}
-                disabled={isDeleting}
-                className="flex-1 min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-card disabled:opacity-50"
-              >
-                إلغاء
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="flex-1 min-h-[44px] rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-              >
-                {isDeleting ? "جاري الحذف..." : "حذف"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="تأكيد حذف العضو"
+          message="هل أنت متأكد من حذف هذا العضو؟ العضو سيفقد صلاحية الدخول فورًا."
+          confirmLabel={isDeleting ? "جاري الحذف..." : "حذف"}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteConfirmUserId(null)}
+          confirmDisabled={isDeleting}
+          cancelDisabled={isDeleting}
+        />
       )}
     </div>
   );

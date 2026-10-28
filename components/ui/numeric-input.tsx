@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
+import { Input } from "@/components/ui/input";
 
 interface NumericInputProps {
   value: number;
@@ -63,12 +64,9 @@ export function NumericInput({
     [onChange, min, max, isTouch]
   );
 
-  const baseClass =
-    "w-full rounded-lg bg-surface-page px-3 py-2 text-foreground outline-none focus:ring-2 focus:ring-primary";
-
   if (isTouch) {
     return (
-      <input
+      <Input
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
@@ -80,13 +78,13 @@ export function NumericInput({
         disabled={disabled}
         aria-required={required}
         style={{ fontSize: '16px' }}
-        className={`${baseClass} ${className}`}
+        className={className}
       />
     );
   }
 
   return (
-    <input
+    <Input
       type="number"
       value={value}
       onChange={handleChange}
@@ -98,7 +96,7 @@ export function NumericInput({
       required={required}
       disabled={disabled}
       aria-required={required}
-      className={`${baseClass} ${className}`}
+      className={className}
     />
   );
 }

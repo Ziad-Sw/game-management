@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { SectionCard } from "@/components/ui/section-card";
 
 interface PricingRule {
   id: string;
@@ -137,11 +138,10 @@ export default function PingpongSettingsForm({
   return (
     <div className="space-y-6">
       {/* Toggle Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">تفعيل البينغ بونغ</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          قم بتفعيل أو تعطيل خدمة البينغ بونغ في المحل
-        </p>
+      <SectionCard
+        title="تفعيل البينغ بونغ"
+        description="قم بتفعيل أو تعطيل خدمة البينغ بونغ في المحل"
+      >
 
         <div className="mt-4 flex items-center gap-4">
           <button
@@ -160,14 +160,13 @@ export default function PingpongSettingsForm({
               : "معطّل — اضغط للتفعيل"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Table Count Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">عدد الطاولات</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          حدد عدد طاولات البينغ بونغ الموجودة في المحل
-        </p>
+      <SectionCard
+        title="عدد الطاولات"
+        description="حدد عدد طاولات البينغ بونغ الموجودة في المحل"
+      >
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <NumericInput
@@ -186,14 +185,13 @@ export default function PingpongSettingsForm({
             {isSavingTableCount ? "جاري..." : "حفظ"}
           </button>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Pricing Section */}
-      <div className="rounded-xl bg-surface-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">أسعار البينغ بونغ</h2>
-        <p className="mt-1 text-sm text-foreground-muted">
-          أسعار اللعب بالساعة وبعدد الجيمات لكل نوع لعب
-        </p>
+      <SectionCard
+        title="أسعار البينغ بونغ"
+        description="أسعار اللعب بالساعة وبعدد الجيمات لكل نوع لعب"
+      >
 
         <div className="mt-6 space-y-6">
           {/* Hourly Pricing */}
@@ -300,7 +298,7 @@ export default function PingpongSettingsForm({
             </div>
           </div>
         </div>
-      </div>
+      </SectionCard>
     </div>
   );
 }
