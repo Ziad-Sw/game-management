@@ -22,8 +22,8 @@ function generateLoginId(): string {
 
 /**
  * POST /api/team/invite — invites a new staff member by email.
- * Body: { email: string }
- * System auto-generates login_id, derives display_name from email prefix.
+ * Body: { email: string, display_name?: string }
+ * System auto-generates login_id; display_name accepted optionally, else derived from email prefix.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -39,11 +39,18 @@ export async function POST(request: NextRequest) {
     await assertPermission(userId, "manage_team");
 
     const body = await request.json();
-    const { email } = body ?? {};
+    const { email, display_name } = body ?? {};
 
     if (typeof email !== "string" || email.trim().length === 0) {
       return NextResponse.json(
         { error: "البريد الإلكتروني مطلوب." },
+        { status: 400 }
+      );
+    }
+
+    if (display_name !== undefined && typeof display_name !== "string") {
+      return NextResponse.json(
+        { error: "صيغة الاسم غير صالحة." },
         { status: 400 }
       );
     }
@@ -103,8 +110,8 @@ export async function POST(request: NextRequest) {
       }
     } while (!isUnique);
 
-    // Derive display_name from email prefix
-    const displayName = trimmedEmail.split("@")[0];
+    // Use the provided name when given, else derive from email prefix
+    const displayName = display_name?.trim() || trimmedEmail.split("@")[0];
 
     // Create the user
     const { data: newUser, error: createError } = await supabase

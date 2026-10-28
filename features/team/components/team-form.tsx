@@ -6,6 +6,8 @@ import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SectionCard } from "@/components/ui/section-card";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 import { formatCount } from "@/lib/format/number";
 import { ENDPOINTS } from "@/lib/constants/endpoints";
@@ -30,6 +32,8 @@ export default function TeamManagementForm({
   const { showToast } = useToast();
   const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteDisplayName, setInviteDisplayName] = useState("");
+  const [addedMember, setAddedMember] = useState<{ loginId: string; displayName: string } | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editLoginId, setEditLoginId] = useState("");
   const [editDisplayName, setEditDisplayName] = useState("");
@@ -57,12 +61,20 @@ export default function TeamManagementForm({
       onSuccess: (data) => {
         setTeamMembers((prev) => [...prev, data.user]);
         setInviteEmail("");
+        setInviteDisplayName("");
+        setAddedMember({
+          loginId: data.user.login_id,
+          displayName: data.user.display_name || data.user.email || "",
+        });
       },
       action: async (): Promise<{ user: User }> => {
         const response = await fetch(ENDPOINTS.team.invite, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: inviteEmail.trim() }),
+          body: JSON.stringify({
+            email: inviteEmail.trim(),
+            display_name: inviteDisplayName.trim() || undefined,
+          }),
         });
 
         const data = await response.json();
@@ -74,6 +86,12 @@ export default function TeamManagementForm({
         return data;
       },
     });
+  };
+
+  const handleCopyLoginId = async () => {
+    if (!addedMember) return;
+    await navigator.clipboard.writeText(addedMember.loginId);
+    showToast("success", "تم نسخ معرّف الدخول");
   };
 
   const startEditing = (member: User) => {
@@ -169,28 +187,37 @@ export default function TeamManagementForm({
       {/* Invite Section */}
       <SectionCard
         title="إضافة عضو جديد"
-        description="أدخل البريد الإلكتروني للموظف لإرسال دعوة. النظام سيولّد معرّف دخول تلقائيًا."
+        description="أدخل اسم الموظف وبريده الإلكتروني. النظام سيولّد معرّف دخول تلقائيًا."
       >
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 space-y-2">
           <Input
-            type="email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleInvite(); }}
+            type="text"
+            value={inviteDisplayName}
+            onChange={(e) => setInviteDisplayName(e.target.value)}
             disabled={!canEdit}
-            className="flex-1"
-            placeholder="example@email.com"
-            dir="ltr"
+            placeholder="اسم الموظف (اختياري)"
           />
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleInvite(); }}
+              disabled={!canEdit}
+              className="flex-1"
+              placeholder="example@email.com"
+              dir="ltr"
+            />
             <button
               type="button"
-            onClick={handleInvite}
-            disabled={!canEdit || isInviting}
-            className="min-h-[44px] min-w-[100px] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isInviting ? "جاري..." : "تأكيد"}
-          </button>
+              onClick={handleInvite}
+              disabled={!canEdit || isInviting}
+              className="min-h-[44px] min-w-[100px] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isInviting ? "جاري..." : "تأكيد"}
+            </button>
+          </div>
         </div>
       </SectionCard>
 
@@ -356,6 +383,48 @@ export default function TeamManagementForm({
           confirmDisabled={isDeleting}
           cancelDisabled={isDeleting}
         />
+      )}
+
+      {/* Added Member ID Popup */}
+      {addedMember && (
+        <Modal className="w-full max-w-sm rounded-xl border border-foreground-muted/20 bg-surface-card p-6 shadow-2xl text-center">
+          <h2 className="text-lg font-semibold text-foreground">
+            تمت إضافة الموظف
+          </h2>
+          <p className="mt-1 text-sm text-foreground-muted">
+            {addedMember.displayName}
+          </p>
+          <div className="mt-4 rounded-lg bg-surface-page p-4">
+            <p className="text-xs text-foreground-muted">معرّف الدخول</p>
+            <div
+              dir="ltr"
+              className="mt-1 text-2xl font-bold tracking-widest text-foreground break-all"
+            >
+              {addedMember.loginId}
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-foreground-muted">
+            شارك هذا المعرّف مع الموظف — هو ما يدخل به إلى النظام.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <Button
+              variant="secondary"
+              size="md"
+              fill
+              onClick={handleCopyLoginId}
+            >
+              نسخ المعرّف
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              fill
+              onClick={() => setAddedMember(null)}
+            >
+              تم
+            </Button>
+          </div>
+        </Modal>
       )}
     </div>
   );
