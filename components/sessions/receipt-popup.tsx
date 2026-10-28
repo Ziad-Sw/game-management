@@ -7,7 +7,7 @@ import { Station, Session } from "@/types/database";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
+import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 import { calculateGameEntrySubtotal } from "@/lib/pricing/calculation";
 
 interface ReceiptPopupProps {

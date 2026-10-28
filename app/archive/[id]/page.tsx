@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
-import AuthenticatedShell from "@/components/layout/authenticated-shell";
+import AuthenticatedShell from "@/components/shared/authenticated-shell";
 import { formatCurrency, formatCount } from "@/lib/format/number";
 import { formatDate, formatDateTime, formatTime } from "@/lib/format/time";
 import { createAdminClient } from "@/lib/supabase/admin";

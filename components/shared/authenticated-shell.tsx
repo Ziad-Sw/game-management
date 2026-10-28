@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ToastProvider, useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import Sidebar from "@/components/layout/sidebar";
+import Sidebar from "@/components/shared/sidebar";
 
 interface AuthenticatedUser {
   login_id: string;

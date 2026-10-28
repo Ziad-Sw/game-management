@@ -12,7 +12,7 @@ import { NumericInput } from "@/components/ui/numeric-input";
 import { ModeToggle } from "./mode-toggle";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
-import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
+import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 
 interface SessionPopupProps {
   station: Station;

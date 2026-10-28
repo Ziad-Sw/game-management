@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import AuthenticatedShell from "@/components/layout/authenticated-shell";
+import AuthenticatedShell from "@/components/shared/authenticated-shell";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   SESSION_COOKIE_NAME,

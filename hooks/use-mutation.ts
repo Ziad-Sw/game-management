@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useToast } from "./toast";
+import { useToast } from "@/components/ui/toast";
 
 export interface MutationConfig<TResult> {
   /** Exact per-call async work (fetch + state-dependent throws). */

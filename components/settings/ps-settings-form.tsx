@@ -4,7 +4,7 @@ import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
 import { useToast } from "@/components/ui/toast";
-import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
+import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 
 interface PricingRule {
   id: string;

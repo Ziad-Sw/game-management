@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import AuthenticatedShell from "@/components/layout/authenticated-shell";
+import AuthenticatedShell from "@/components/shared/authenticated-shell";
 import CalendarGrid from "@/components/archive/calendar-grid";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {

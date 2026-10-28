@@ -4,7 +4,7 @@ import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SectionCard } from "@/components/ui/section-card";
-import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
+import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format/number";
 

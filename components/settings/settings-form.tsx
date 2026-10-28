@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/section-card";
-import { useMutation } from "@/components/ui/use-mutation";
+import { useMutation } from "@/hooks/use-mutation";
 
 interface ShopData {
   id: string;
