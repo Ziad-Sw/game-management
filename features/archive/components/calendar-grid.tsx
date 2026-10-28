@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatCount, formatCurrency } from "@/lib/format/number";
 import { formatDate, formatTime } from "@/lib/format/time";
-import type { ArchiveShift } from "@/types/archive";
+import type { ArchiveShift } from "@/features/archive/types";
 
 interface CalendarGridProps {
   shifts: ArchiveShift[];

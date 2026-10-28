@@ -1,4 +1,4 @@
-import type { StationType, PricingMode, BillingMode, SessionStatus } from "./database";
+import type { StationType, PricingMode, BillingMode, SessionStatus } from "@/types/database";
 
 export interface ArchiveShiftSession {
   id: string;
