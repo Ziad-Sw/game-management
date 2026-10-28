@@ -4,6 +4,7 @@ import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
 import { useToast } from "@/components/ui/toast";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 
 interface PricingRule {
   id: string;
@@ -41,36 +42,34 @@ export default function PsSettingsForm({
     initialPricingRules.find((r) => r.mode === "multi" && r.unit === "game")?.rate ?? 0
   );
   const [stationCount, setStationCount] = useState(initialStationCount ?? 0);
-  const [isSavingToggle, setIsSavingToggle] = useState(false);
+  const { mutate: togglePs, isPending: isSavingToggle } = useMutation();
+  const { mutate: saveStationCount, isPending: isSavingStationCount } =
+    useMutation();
+  const { mutate: savingPricing } = useMutation();
   const [savingMode, setSavingMode] = useState<string | null>(null);
-  const [isSavingStationCount, setIsSavingStationCount] = useState(false);
 
   const handleSaveToggle = async () => {
-    setIsSavingToggle(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ps_enabled: !psEnabled }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error("API Error:", error);
-        showToast("error", error.error || "حدث خطأ أثناء تحديث الإعدادات");
-        return;
-      }
-
-      setPsEnabled(!psEnabled);
-      showToast("success", psEnabled
+    await togglePs({
+      context: "Error toggling PS",
+      successMessage: psEnabled
         ? "تم تعطيل البلايستيشن بنجاح"
-        : "تم تفعيل البلايستيشن بنجاح");
-    } catch (err) {
-      console.error("Error toggling PS:", err);
-      showToast("error", "حدث خطأ أثناء تحديث الإعدادات");
-    } finally {
-      setIsSavingToggle(false);
-    }
+        : "تم تفعيل البلايستيشن بنجاح",
+      fallbackError: "حدث خطأ أثناء تحديث الإعدادات",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setPsEnabled(!psEnabled),
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ps_enabled: !psEnabled }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "حدث خطأ أثناء تحديث الإعدادات");
+        }
+      },
+    });
   };
 
   const handleSaveStationCount = async () => {
@@ -80,56 +79,53 @@ export default function PsSettingsForm({
       return;
     }
 
-    setIsSavingStationCount(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ps_station_count: count }),
-      });
+    await saveStationCount({
+      context: "Error saving station count",
+      successMessage: "تم حفظ عدد الأجهزة بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ عدد الأجهزة",
+      getErrorMessage: errorMessageFrom,
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ps_station_count: count }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        showToast("error", error.error || "حدث خطأ أثناء حفظ عدد الأجهزة");
-        return;
-      }
-
-      showToast("success", "تم حفظ عدد الأجهزة بنجاح");
-    } catch (err) {
-      console.error("Error saving station count:", err);
-      showToast("error", "حدث خطأ أثناء حفظ عدد الأجهزة");
-    } finally {
-      setIsSavingStationCount(false);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "حدث خطأ أثناء حفظ عدد الأجهزة");
+        }
+      },
+    });
   };
 
   const handleSavePricing = async (mode: "single" | "multi", unit: "hour" | "game", rate: number) => {
     const key = `${mode}_${unit}`;
     setSavingMode(key);
-    try {
-      const response = await fetch("/api/pricing-rules/upsert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          station_type: "playstation",
-          mode,
-          unit,
-          rate,
-        }),
-      });
+    await savingPricing({
+      context: "Error saving pricing",
+      successMessage: "تم حفظ السعر بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ السعر",
+      getErrorMessage: errorMessageFrom,
+      action: async () => {
+        const response = await fetch("/api/pricing-rules/upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            station_type: "playstation",
+            mode,
+            unit,
+            rate,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update pricing");
-      }
-
-      showToast("success", "تم حفظ السعر بنجاح");
-    } catch (err) {
-      console.error("Error saving pricing:", err);
-      showToast("error", "حدث خطأ أثناء حفظ السعر");
-    } finally {
-      setSavingMode(null);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to update pricing");
+        }
+      },
+    });
+    setSavingMode(null);
   };
 
   const StationTypeLabel = "بلايستيشن";

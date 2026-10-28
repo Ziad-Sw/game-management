@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 
 interface PricingRule {
   id: string;
@@ -43,35 +44,34 @@ export default function PingpongSettingsForm({
     initialPricingRules.find((r) => r.mode === "multi" && r.unit === "game")?.rate ?? 0
   );
   const [tableCount, setTableCount] = useState(initialTableCount ?? 0);
-  const [isSavingToggle, setIsSavingToggle] = useState(false);
+  const { mutate: togglePingpong, isPending: isSavingToggle } = useMutation();
+  const { mutate: saveTableCount, isPending: isSavingTableCount } =
+    useMutation();
+  const { mutate: savingPricing } = useMutation();
   const [savingMode, setSavingMode] = useState<string | null>(null);
-  const [isSavingTableCount, setIsSavingTableCount] = useState(false);
 
   const handleSaveToggle = async () => {
-    setIsSavingToggle(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pingpong_enabled: !pingpongEnabled }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        showToast("error", error.error || "حدث خطأ أثناء تحديث الإعدادات");
-        return;
-      }
-
-      setPingpongEnabled(!pingpongEnabled);
-      showToast("success", pingpongEnabled
+    await togglePingpong({
+      context: "Error toggling pingpong",
+      successMessage: pingpongEnabled
         ? "تم تعطيل البينغ بونغ بنجاح"
-        : "تم تفعيل البينغ بونغ بنجاح");
-    } catch (err) {
-      console.error("Error toggling pingpong:", err);
-      showToast("error", "حدث خطأ أثناء تحديث الإعدادات");
-    } finally {
-      setIsSavingToggle(false);
-    }
+        : "تم تفعيل البينغ بونغ بنجاح",
+      fallbackError: "حدث خطأ أثناء تحديث الإعدادات",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setPingpongEnabled(!pingpongEnabled),
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pingpong_enabled: !pingpongEnabled }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "حدث خطأ أثناء تحديث الإعدادات");
+        }
+      },
+    });
   };
 
   const handleSaveTableCount = async () => {
@@ -81,58 +81,53 @@ export default function PingpongSettingsForm({
       return;
     }
 
-    setIsSavingTableCount(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pingpong_table_count: count }),
-      });
+    await saveTableCount({
+      context: "Error saving table count",
+      successMessage: "تم حفظ عدد الطاولات بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ عدد الطاولات",
+      getErrorMessage: errorMessageFrom,
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pingpong_table_count: count }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        showToast("error", error.error || "حدث خطأ أثناء حفظ عدد الطاولات");
-        return;
-      }
-
-      showToast("success", "تم حفظ عدد الطاولات بنجاح");
-    } catch (err) {
-      console.error("Error saving table count:", err);
-      showToast("error", "حدث خطأ أثناء حفظ عدد الطاولات");
-    } finally {
-      setIsSavingTableCount(false);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "حدث خطأ أثناء حفظ عدد الطاولات");
+        }
+      },
+    });
   };
 
   const handleSavePricing = async (mode: "single" | "multi", unit: "hour" | "game", rate: number) => {
     const key = `${mode}_${unit}`;
     setSavingMode(key);
-    try {
-      const response = await fetch("/api/pricing-rules/upsert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          station_type: "pingpong",
-          mode,
-          unit,
-          rate,
-        }),
-      });
+    await savingPricing({
+      context: "Error saving pricing",
+      successMessage: "تم حفظ السعر بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ السعر",
+      getErrorMessage: errorMessageFrom,
+      action: async () => {
+        const response = await fetch("/api/pricing-rules/upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            station_type: "pingpong",
+            mode,
+            unit,
+            rate,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        showToast("error", error.error || "فشل حفظ السعر");
-        return;
-      }
-
-      showToast("success", "تم حفظ السعر بنجاح");
-    } catch (err) {
-      console.error("Error saving pricing:", err);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ أثناء حفظ السعر";
-      showToast("error", errorMessage);
-    } finally {
-      setSavingMode(null);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "فشل حفظ السعر");
+        }
+      },
+    });
+    setSavingMode(null);
   };
 
   return (

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
-import { useToast } from "@/components/ui/toast";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 
 interface ShiftsSettingsFormProps {
   initialShiftsPerDay: number;
@@ -16,7 +17,7 @@ export default function ShiftsSettingsForm({
 }: ShiftsSettingsFormProps) {
   const { showToast } = useToast();
   const [shiftsPerDay, setShiftsPerDay] = useState(initialShiftsPerDay);
-  const [isSaving, setIsSaving] = useState(false);
+  const { mutate: saveShifts, isPending: isSaving } = useMutation();
 
   const handleSave = async () => {
     const count = shiftsPerDay;
@@ -25,27 +26,24 @@ export default function ShiftsSettingsForm({
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shifts_per_day: count }),
-      });
+    await saveShifts({
+      context: "Error saving shifts per day",
+      successMessage: "تم حفظ عدد الورديات بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ الإعدادات",
+      getErrorMessage: errorMessageFrom,
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shifts_per_day: count }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        showToast("error", error.error || "حدث خطأ أثناء حفظ الإعدادات");
-        return;
-      }
-
-      showToast("success", "تم حفظ عدد الورديات بنجاح");
-    } catch (err) {
-      console.error("Error saving shifts per day:", err);
-      showToast("error", "حدث خطأ أثناء حفظ الإعدادات");
-    } finally {
-      setIsSaving(false);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "حدث خطأ أثناء حفظ الإعدادات");
+        }
+      },
+    });
   };
 
   return (

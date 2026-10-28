@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SectionCard } from "@/components/ui/section-card";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 import { formatCount } from "@/lib/format/number";
 
 interface TeamManagementFormProps {
@@ -28,15 +29,18 @@ export default function TeamManagementForm({
   const { showToast } = useToast();
   const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [isInviting, setIsInviting] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editLoginId, setEditLoginId] = useState("");
   const [editDisplayName, setEditDisplayName] = useState("");
   const [editPermissions, setEditPermissions] = useState<StaffPermissions | null>(null);
   const [editEmail, setEditEmail] = useState("");
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
-  const [deleteConfirmUserId, setDeleteConfirmUserId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmUserId, setDeleteConfirmUserId] = useState<string | null>(
+    null
+  );
+
+  const { mutate: inviteMember, isPending: isInviting } = useMutation();
+  const { mutate: saveMember, isPending: isSavingEdit } = useMutation();
+  const { mutate: deleteMember, isPending: isDeleting } = useMutation();
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) {
@@ -44,29 +48,31 @@ export default function TeamManagementForm({
       return;
     }
 
-    setIsInviting(true);
-    try {
-      const response = await fetch("/api/team/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail.trim() }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
+    await inviteMember({
+      context: "Error inviting user",
+      successMessage: "تمت إضافة العضو بنجاح",
+      fallbackError: "حدث خطأ أثناء إضافة العضو",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (data) => {
         setTeamMembers((prev) => [...prev, data.user]);
         setInviteEmail("");
-        showToast("success", "تمت إضافة العضو بنجاح");
-      } else {
-        showToast("error", data.error || "فشلت إضافة العضو");
-      }
-    } catch (err) {
-      console.error("Error inviting user:", err);
-      showToast("error", "حدث خطأ أثناء إضافة العضو");
-    } finally {
-      setIsInviting(false);
-    }
+      },
+      action: async (): Promise<{ user: User }> => {
+        const response = await fetch("/api/team/invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: inviteEmail.trim() }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "فشلت إضافة العضو");
+        }
+
+        return data;
+      },
+    });
   };
 
   const startEditing = (member: User) => {
@@ -98,63 +104,63 @@ export default function TeamManagementForm({
       return;
     }
 
-    setIsSavingEdit(true);
-    try {
-      const response = await fetch(`/api/team/${editingUserId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          login_id: editLoginId.trim(),
-          display_name: editDisplayName.trim(),
-          email: editEmail.trim() || undefined,
-          permissions: editPermissions,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
+    await saveMember({
+      context: "Error saving edit",
+      successMessage: "تم تحديث العضو بنجاح",
+      fallbackError: "حدث خطأ أثناء تحديث العضو",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (data) => {
         setTeamMembers((prev) =>
           prev.map((m) => (m.id === editingUserId ? data.user : m))
         );
         cancelEditing();
-        showToast("success", "تم تحديث العضو بنجاح");
-      } else {
-        showToast("error", data.error || "فشل تحديث العضو");
-      }
-    } catch (err) {
-      console.error("Error saving edit:", err);
-      showToast("error", "حدث خطأ أثناء تحديث العضو");
-    } finally {
-      setIsSavingEdit(false);
-    }
+      },
+      action: async (): Promise<{ user: User }> => {
+        const response = await fetch(`/api/team/${editingUserId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            login_id: editLoginId.trim(),
+            display_name: editDisplayName.trim(),
+            email: editEmail.trim() || undefined,
+            permissions: editPermissions,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "فشل تحديث العضو");
+        }
+
+        return data;
+      },
+    });
   };
 
   const handleDelete = async () => {
     if (!deleteConfirmUserId) return;
 
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/team/${deleteConfirmUserId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setTeamMembers((prev) =>
-          prev.filter((m) => m.id !== deleteConfirmUserId)
-        );
+    await deleteMember({
+      context: "Error deleting user",
+      successMessage: "تم حذف العضو وفقد صلاحية الدخول",
+      fallbackError: "حدث خطأ أثناء حذف العضو",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => {
+        setTeamMembers((prev) => prev.filter((m) => m.id !== deleteConfirmUserId));
         setDeleteConfirmUserId(null);
-        showToast("success", "تم حذف العضو وفقد صلاحية الدخول");
-      } else {
-        const data = await response.json();
-        showToast("error", data.error || "فشل حذف العضو");
-      }
-    } catch (err) {
-      console.error("Error deleting user:", err);
-      showToast("error", "حدث خطأ أثناء حذف العضو");
-    } finally {
-      setIsDeleting(false);
-    }
+      },
+      action: async () => {
+        const response = await fetch(`/api/team/${deleteConfirmUserId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "فشل حذف العضو");
+        }
+      },
+    });
   };
 
   return (

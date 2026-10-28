@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/section-card";
+import { useMutation } from "@/components/ui/use-mutation";
 
 interface ShopData {
   id: string;
@@ -24,8 +25,8 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
   const { showToast } = useToast();
   const [shopName, setShopName] = useState(initialShopData.name);
   const [ownerName, setOwnerName] = useState(initialShopData.owner_name || "");
-  const [isSavingShopName, setIsSavingShopName] = useState(false);
-  const [isSavingOwnerName, setIsSavingOwnerName] = useState(false);
+  const { mutate: saveShopName, isPending: isSavingShopName } = useMutation();
+  const { mutate: saveOwnerName, isPending: isSavingOwnerName } = useMutation();
 
   const handleSaveShopName = async () => {
     if (!shopName.trim()) {
@@ -33,25 +34,22 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
       return;
     }
 
-    setIsSavingShopName(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: shopName.trim() }),
-      });
+    await saveShopName({
+      context: "Error saving shop name",
+      successMessage: "تم حفظ اسم المحل بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ اسم المحل",
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: shopName.trim() }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to update shop name");
-      }
-
-      showToast("success", "تم حفظ اسم المحل بنجاح");
-    } catch (err) {
-      console.error("Error saving shop name:", err);
-      showToast("error", "حدث خطأ أثناء حفظ اسم المحل");
-    } finally {
-      setIsSavingShopName(false);
-    }
+        if (!response.ok) {
+          throw new Error("Failed to update shop name");
+        }
+      },
+    });
   };
 
   const handleSaveOwnerName = async () => {
@@ -60,25 +58,22 @@ export default function SettingsForm({ initialShopData, canEdit = true }: Settin
       return;
     }
 
-    setIsSavingOwnerName(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ owner_name: ownerName.trim() }),
-      });
+    await saveOwnerName({
+      context: "Error saving owner name",
+      successMessage: "تم حفظ اسم صاحب المحل بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ اسم صاحب المحل",
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner_name: ownerName.trim() }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to update owner name");
-      }
-
-      showToast("success", "تم حفظ اسم صاحب المحل بنجاح");
-    } catch (err) {
-      console.error("Error saving owner name:", err);
-      showToast("error", "حدث خطأ أثناء حفظ اسم صاحب المحل");
-    } finally {
-      setIsSavingOwnerName(false);
-    }
+        if (!response.ok) {
+          throw new Error("Failed to update owner name");
+        }
+      },
+    });
   };
 
   return (

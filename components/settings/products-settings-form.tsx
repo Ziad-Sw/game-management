@@ -4,6 +4,7 @@ import { useState } from "react";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SectionCard } from "@/components/ui/section-card";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format/number";
 
@@ -27,8 +28,9 @@ export default function ProductsSettingsForm({
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [newProductName, setNewProductName] = useState("");
   const [newProductPrice, setNewProductPrice] = useState(0);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const { mutate: addProduct, isPending: isAdding } = useMutation();
+  const { mutate: saveEdit, isPending: isSavingEdit } = useMutation();
+  const { mutate: deleteProduct } = useMutation();
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -47,34 +49,34 @@ export default function ProductsSettingsForm({
       return;
     }
 
-    setIsAdding(true);
-    try {
-      const response = await fetch("/api/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newProductName.trim(),
-          price,
-        }),
-      });
+    await addProduct({
+      context: "Error adding product",
+      successMessage: "تم إضافة المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء إضافة المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (result) => {
+        setProducts([...products, result.product]);
+        setNewProductName("");
+        setNewProductPrice(0);
+      },
+      action: async (): Promise<{ product: Product }> => {
+        const response = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newProductName.trim(),
+            price,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to add product");
-      }
+        const raw = await response.json();
+        if (!response.ok) {
+          throw new Error(raw.error || "Failed to add product");
+        }
 
-      const result = await response.json();
-      setProducts([...products, result.product]);
-      setNewProductName("");
-      setNewProductPrice(0);
-      showToast("success", "تم إضافة المشروب بنجاح");
-    } catch (err) {
-      console.error("Error adding product:", err);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ أثناء إضافة المشروب";
-      showToast("error", errorMessage);
-    } finally {
-      setIsAdding(false);
-    }
+        return raw;
+      },
+    });
   };
 
   const handleDeleteProduct = (id: string) => {
@@ -87,25 +89,24 @@ export default function ProductsSettingsForm({
 
     setShowDeleteConfirm(null);
     setIsDeletingId(id);
-    try {
-      const response = await fetch(`/api/products/${id}`, {
-        method: "DELETE",
-      });
+    await deleteProduct({
+      context: "Error deleting product",
+      successMessage: "تم حذف المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء حذف المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setProducts(products.filter((p) => p.id !== id)),
+      action: async () => {
+        const response = await fetch(`/api/products/${id}`, {
+          method: "DELETE",
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete product");
-      }
-
-      setProducts(products.filter((p) => p.id !== id));
-      showToast("success", "تم حذف المشروب بنجاح");
-    } catch (err) {
-      console.error("Error deleting product:", err);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ أثناء حذف المشروب";
-      showToast("error", errorMessage);
-    } finally {
-      setIsDeletingId(null);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to delete product");
+        }
+      },
+    });
+    setIsDeletingId(null);
   };
 
   const handleDeleteCancel = () => {
@@ -136,35 +137,35 @@ export default function ProductsSettingsForm({
       return;
     }
 
-    setIsSavingEdit(true);
-    try {
-      const response = await fetch(`/api/products/${editingProductId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editingName.trim(),
-          price,
-        }),
-      });
+    await saveEdit({
+      context: "Error updating product",
+      successMessage: "تم تحديث المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء تحديث المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (result) => {
+        setProducts(
+          products.map((p) => (p.id === editingProductId ? result.product : p))
+        );
+        handleCancelEdit();
+      },
+      action: async (): Promise<{ product: Product }> => {
+        const response = await fetch(`/api/products/${editingProductId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: editingName.trim(),
+            price,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update product");
-      }
+        const raw = await response.json();
+        if (!response.ok) {
+          throw new Error(raw.error || "Failed to update product");
+        }
 
-      const result = await response.json();
-      setProducts(
-        products.map((p) => (p.id === editingProductId ? result.product : p))
-      );
-      showToast("success", "تم تحديث المشروب بنجاح");
-      handleCancelEdit();
-    } catch (err) {
-      console.error("Error updating product:", err);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ أثناء تحديث المشروب";
-      showToast("error", errorMessage);
-    } finally {
-      setIsSavingEdit(false);
-    }
+        return raw;
+      },
+    });
   };
 
   return (

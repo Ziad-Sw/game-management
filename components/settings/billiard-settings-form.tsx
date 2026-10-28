@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/toast";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SectionCard } from "@/components/ui/section-card";
+import { useMutation, errorMessageFrom } from "@/components/ui/use-mutation";
 
 interface PricingRule {
   id: string;
@@ -73,35 +74,34 @@ export default function BilliardSettingsForm({
     findRule("combo", "quad", "game")?.rate ?? 0
   );
   const [tableCount, setTableCount] = useState(initialTableCount ?? 0);
-  const [isSavingToggle, setIsSavingToggle] = useState(false);
+  const { mutate: toggleBilliard, isPending: isSavingToggle } = useMutation();
+  const { mutate: saveTableCount, isPending: isSavingTableCount } =
+    useMutation();
+  const { mutate: savingPricing } = useMutation();
   const [savingMode, setSavingMode] = useState<string | null>(null);
-  const [isSavingTableCount, setIsSavingTableCount] = useState(false);
 
   const handleSaveToggle = async () => {
-    setIsSavingToggle(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ billiard_enabled: !billiardEnabled }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        showToast("error", error.error || "حدث خطأ أثناء تحديث الإعدادات");
-        return;
-      }
-
-      setBilliardEnabled(!billiardEnabled);
-      showToast("success", billiardEnabled
+    await toggleBilliard({
+      context: "Error toggling billiard",
+      successMessage: billiardEnabled
         ? "تم تعطيل البلياردو بنجاح"
-        : "تم تفعيل البلياردو بنجاح");
-    } catch (err) {
-      console.error("Error toggling billiard:", err);
-      showToast("error", "حدث خطأ أثناء تحديث الإعدادات");
-    } finally {
-      setIsSavingToggle(false);
-    }
+        : "تم تفعيل البلياردو بنجاح",
+      fallbackError: "حدث خطأ أثناء تحديث الإعدادات",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setBilliardEnabled(!billiardEnabled),
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ billiard_enabled: !billiardEnabled }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "حدث خطأ أثناء تحديث الإعدادات");
+        }
+      },
+    });
   };
 
   const handleSaveTableCount = async () => {
@@ -111,27 +111,24 @@ export default function BilliardSettingsForm({
       return;
     }
 
-    setIsSavingTableCount(true);
-    try {
-      const response = await fetch("/api/shops/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ billiard_table_count: count }),
-      });
+    await saveTableCount({
+      context: "Error saving table count",
+      successMessage: "تم حفظ عدد الطاولات بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ عدد الطاولات",
+      getErrorMessage: errorMessageFrom,
+      action: async () => {
+        const response = await fetch("/api/shops/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ billiard_table_count: count }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        showToast("error", error.error || "حدث خطأ أثناء حفظ عدد الطاولات");
-        return;
-      }
-
-      showToast("success", "تم حفظ عدد الطاولات بنجاح");
-    } catch (err) {
-      console.error("Error saving table count:", err);
-      showToast("error", "حدث خطأ أثناء حفظ عدد الطاولات");
-    } finally {
-      setIsSavingTableCount(false);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "حدث خطأ أثناء حفظ عدد الطاولات");
+        }
+      },
+    });
   };
 
   interface SavePricingParams {
@@ -144,33 +141,32 @@ export default function BilliardSettingsForm({
   const handleSavePricing = async ({ playType, playSubtype, unit, rate }: SavePricingParams) => {
     const key = `${playType}_${playSubtype}_${unit}`;
     setSavingMode(key);
-    try {
-      const response = await fetch("/api/pricing-rules/upsert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          station_type: "billiard",
-          mode: playSubtype === "multi" || playSubtype === "triple" || playSubtype === "quad" ? "multi" : "single",
-          unit,
-          rate,
-          play_type: playType,
-          play_subtype: playSubtype,
-        }),
-      });
+    await savingPricing({
+      context: "Error saving pricing",
+      successMessage: "تم حفظ السعر بنجاح",
+      fallbackError: "حدث خطأ أثناء حفظ السعر",
+      getErrorMessage: errorMessageFrom,
+      action: async () => {
+        const response = await fetch("/api/pricing-rules/upsert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            station_type: "billiard",
+            mode: playSubtype === "multi" || playSubtype === "triple" || playSubtype === "quad" ? "multi" : "single",
+            unit,
+            rate,
+            play_type: playType,
+            play_subtype: playSubtype,
+          }),
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update pricing");
-      }
-
-      showToast("success", "تم حفظ السعر بنجاح");
-    } catch (err) {
-      console.error("Error saving pricing:", err);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ أثناء حفظ السعر";
-      showToast("error", errorMessage);
-    } finally {
-      setSavingMode(null);
-    }
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to update pricing");
+        }
+      },
+    });
+    setSavingMode(null);
   };
 
   return (
