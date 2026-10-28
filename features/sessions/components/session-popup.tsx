@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Station, Session, Product, BilliardGameEntry, StationGameEntry } from "@/types/database";
 import type { BillingMode, PlayType, PlaySubtype, PricingMode } from "@/types/database";
-import { calculateGameEntrySubtotal, calculateBilliardGameEntriesCost, calculateStationGameEntriesCost, calculateGameEntriesCount } from "@/lib/pricing/calculation";
+import { calculateGameEntrySubtotal, calculateBilliardGameEntriesCost, calculateStationGameEntriesCost, calculateGameEntriesCount } from "@/features/sessions/lib/calculation";
 import { formatCurrency, formatCount } from "@/lib/format/number";
 import { ReceiptPopup } from "./receipt-popup";
 import { useToast } from "@/components/ui/toast";

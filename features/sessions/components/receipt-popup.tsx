@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
-import { calculateGameEntrySubtotal } from "@/lib/pricing/calculation";
+import { calculateGameEntrySubtotal } from "@/features/sessions/lib/calculation";
 
 interface ReceiptPopupProps {
   session: Session;
