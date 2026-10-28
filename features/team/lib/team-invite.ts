@@ -1,0 +1,198 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getShopIdFromRequest } from "@/lib/auth/require-shop";
+import { assertPermission, PermissionError, getUserIdFromRequest } from "@/lib/auth/permissions";
+import { DEFAULT_STAFF_PERMISSIONS } from "@/types";
+
+/**
+ * Generates a random 6-character alphanumeric login_id.
+ * Excludes ambiguous characters (I, O, 0, 1).
+ */
+function generateLoginId(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const array = new Uint8Array(6);
+  crypto.getRandomValues(array);
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars[array[i] % chars.length];
+  }
+  return result;
+}
+
+/**
+ * POST /api/team/invite — invites a new staff member by email.
+ * Body: { email: string, display_name?: string }
+ * System auto-generates login_id; display_name accepted optionally, else derived from email prefix.
+ * If the email belongs to a deactivated member, the member is reactivated instead
+ * (fresh login_id, history preserved).
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const shopId = await getShopIdFromRequest();
+    if (!shopId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = await getUserIdFromRequest();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    await assertPermission(userId, "manage_team");
+
+    const body = await request.json();
+    const { email, display_name } = body ?? {};
+
+    if (typeof email !== "string" || email.trim().length === 0) {
+      return NextResponse.json(
+        { error: "البريد الإلكتروني مطلوب." },
+        { status: 400 }
+      );
+    }
+
+    if (display_name !== undefined && typeof display_name !== "string") {
+      return NextResponse.json(
+        { error: "صيغة الاسم غير صالحة." },
+        { status: 400 }
+      );
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return NextResponse.json(
+        { error: "صيغة البريد الإلكتروني غير صالحة." },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createAdminClient();
+
+    // Check for an active member with this email within the same shop
+    const { data: activeMember } = await supabase
+      .from("users")
+      .select("id")
+      .eq("shop_id", shopId)
+      .eq("email", trimmedEmail)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (activeMember) {
+      return NextResponse.json(
+        { error: "هذا البريد الإلكتروني مستخدم بالفعل في المحل." },
+        { status: 409 }
+      );
+    }
+
+    // A deactivated member with this email is reactivated instead of re-created
+    const { data: deactivatedMember } = await supabase
+      .from("users")
+      .select("id")
+      .eq("shop_id", shopId)
+      .eq("email", trimmedEmail)
+      .eq("is_active", false)
+      .limit(1)
+      .maybeSingle();
+
+    // Generate a unique login_id
+    let loginId: string;
+    let isUnique = false;
+    let attempts = 0;
+
+    do {
+      loginId = generateLoginId();
+      const { data: conflict } = await supabase
+        .from("users")
+        .select("id")
+        .eq("shop_id", shopId)
+        .eq("login_id", loginId)
+        .limit(1)
+        .maybeSingle();
+
+      isUnique = !conflict;
+      attempts++;
+
+      if (attempts > 10) {
+        return NextResponse.json(
+          { error: "تعذر إنشاء معرّف دخول فريد. حاول مرة أخرى." },
+          { status: 500 }
+        );
+      }
+    } while (!isUnique);
+
+    const providedName = display_name?.trim() || null;
+
+    if (deactivatedMember) {
+      const reactivationUpdate: {
+        login_id: string;
+        is_active: boolean;
+        deactivated_at: null;
+        display_name?: string;
+      } = {
+        login_id: loginId,
+        is_active: true,
+        deactivated_at: null,
+      };
+      if (providedName) {
+        reactivationUpdate.display_name = providedName;
+      }
+
+      const { data: reactivatedUser, error: reactivateError } = await supabase
+        .from("users")
+        .update(reactivationUpdate)
+        .eq("id", deactivatedMember.id)
+        .select("id, login_id, display_name, email, role, permissions, is_active, created_at")
+        .maybeSingle();
+
+      if (reactivateError || !reactivatedUser) {
+        console.error("Failed to reactivate user:", reactivateError);
+        return NextResponse.json(
+          { error: "فشل إعادة تفعيل الموظف." },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ ok: true, user: reactivatedUser });
+    }
+
+    // New member: use the provided name if given, else derive from email prefix
+    const displayName = providedName ?? trimmedEmail.split("@")[0];
+
+    // Create the user
+    const { data: newUser, error: createError } = await supabase
+      .from("users")
+      .insert({
+        shop_id: shopId,
+        login_id: loginId,
+        display_name: displayName,
+        role: "staff",
+        email: trimmedEmail,
+        permissions: DEFAULT_STAFF_PERMISSIONS,
+        is_active: true,
+      })
+      .select("id, login_id, display_name, email, role, permissions, is_active, created_at")
+      .maybeSingle();
+
+    if (createError || !newUser) {
+      console.error("Failed to create user:", createError);
+      return NextResponse.json(
+        { error: "فشل إنشاء المستخدم." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ ok: true, user: newUser });
+  } catch (err) {
+    if (err instanceof PermissionError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    console.error("Error inviting user:", err);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

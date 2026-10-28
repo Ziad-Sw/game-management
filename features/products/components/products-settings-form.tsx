@@ -1,0 +1,306 @@
+"use client";
+
+import { useState } from "react";
+import { NumericInput } from "@/components/ui/numeric-input";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SectionCard } from "@/components/ui/section-card";
+import { useMutation, errorMessageFrom } from "@/hooks/use-mutation";
+import { useToast } from "@/components/ui/toast";
+import { formatCurrency } from "@/lib/format/number";
+import { ENDPOINTS } from "@/lib/constants/endpoints";
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  is_active: boolean;
+}
+
+interface ProductsSettingsFormProps {
+  initialProducts: Product[];
+  canEdit?: boolean;
+}
+
+export default function ProductsSettingsForm({
+  initialProducts,
+  canEdit = true,
+}: ProductsSettingsFormProps) {
+  const { showToast } = useToast();
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [newProductName, setNewProductName] = useState("");
+  const [newProductPrice, setNewProductPrice] = useState(0);
+  const { mutate: addProduct, isPending: isAdding } = useMutation();
+  const { mutate: saveEdit, isPending: isSavingEdit } = useMutation();
+  const { mutate: deleteProduct } = useMutation();
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [editingPrice, setEditingPrice] = useState(0);
+
+  const handleAddProduct = async () => {
+    if (!newProductName.trim() || newProductPrice <= 0) {
+      showToast("error", "يجب إدخال اسم المشروب والسعر");
+      return;
+    }
+
+    const price = newProductPrice;
+    if (price < 0) {
+      showToast("error", "السعر يجب أن يكون رقمًا موجبًا");
+      return;
+    }
+
+    await addProduct({
+      context: "Error adding product",
+      successMessage: "تم إضافة المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء إضافة المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (result) => {
+        setProducts([...products, result.product]);
+        setNewProductName("");
+        setNewProductPrice(0);
+      },
+      action: async (): Promise<{ product: Product }> => {
+        const response = await fetch(ENDPOINTS.products.list, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: newProductName.trim(),
+            price,
+          }),
+        });
+
+        const raw = await response.json();
+        if (!response.ok) {
+          throw new Error(raw.error || "Failed to add product");
+        }
+
+        return raw;
+      },
+    });
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    setShowDeleteConfirm(id);
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = showDeleteConfirm;
+    if (!id) return;
+
+    setShowDeleteConfirm(null);
+    setIsDeletingId(id);
+    await deleteProduct({
+      context: "Error deleting product",
+      successMessage: "تم حذف المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء حذف المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: () => setProducts(products.filter((p) => p.id !== id)),
+      action: async () => {
+        const response = await fetch(ENDPOINTS.products.byId(id), {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "Failed to delete product");
+        }
+      },
+    });
+    setIsDeletingId(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(null);
+  };
+
+  const handleStartEdit = (product: Product) => {
+    setEditingProductId(product.id);
+    setEditingName(product.name);
+    setEditingPrice(product.price);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProductId(null);
+    setEditingName("");
+    setEditingPrice(0);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingProductId || !editingName.trim() || editingPrice <= 0) {
+      showToast("error", "يجب إدخال اسم المشروب والسعر");
+      return;
+    }
+
+    const price = editingPrice;
+    if (price < 0) {
+      showToast("error", "السعر يجب أن يكون رقمًا موجبًا");
+      return;
+    }
+
+    await saveEdit({
+      context: "Error updating product",
+      successMessage: "تم تحديث المشروب بنجاح",
+      fallbackError: "حدث خطأ أثناء تحديث المشروب",
+      getErrorMessage: errorMessageFrom,
+      onSuccess: (result) => {
+        setProducts(
+          products.map((p) => (p.id === editingProductId ? result.product : p))
+        );
+        handleCancelEdit();
+      },
+      action: async (): Promise<{ product: Product }> => {
+        const response = await fetch(ENDPOINTS.products.byId(editingProductId), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: editingName.trim(),
+            price,
+          }),
+        });
+
+        const raw = await response.json();
+        if (!response.ok) {
+          throw new Error(raw.error || "Failed to update product");
+        }
+
+        return raw;
+      },
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Add New Product */}
+      <SectionCard
+        title="إضافة مشروب جديد"
+        description="أضف مشروب جديد لقائمة المبيعات"
+      >
+
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            value={newProductName}
+            onChange={(e) => setNewProductName(e.target.value)}
+            disabled={!canEdit}
+            className="w-full sm:flex-1 min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground placeholder-foreground-muted/50 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            placeholder="اسم المشروب"
+          />
+          <NumericInput
+              min={0}
+              step={1}
+              value={newProductPrice}
+              placeholder="أدخل السعر"
+              onChange={(v) => setNewProductPrice(Math.max(0, v))}
+              className="sm:w-32"
+              disabled={!canEdit || isAdding}
+            />
+          <button
+            onClick={handleAddProduct}
+            disabled={!canEdit || isAdding}
+            className="w-full sm:w-auto min-h-[44px] sm:min-w-[100px] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isAdding ? "جاري..." : "إضافة"}
+          </button>
+        </div>
+      </SectionCard>
+
+      {/* Products List */}
+      <SectionCard
+        title="المشروبات الحالية"
+        description="قائمة المشروبات المتاحة للبيع"
+      >
+
+        <div className="mt-4 space-y-3">
+          {products.length === 0 ? (
+            <div className="text-center py-8 text-foreground-muted">
+              لا توجد مشروبات حاليًا
+            </div>
+          ) : (
+            products.map((product) => (
+              <div
+                key={product.id}
+                className="flex items-center gap-3 rounded-lg border border-foreground-muted/20 bg-surface-page p-3"
+              >
+                <div className="flex-1">
+                  {editingProductId === product.id ? (
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground placeholder-foreground-muted/50 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!canEdit || isSavingEdit}
+                    />
+                  ) : (
+                    <div className="text-foreground">{product.name}</div>
+                  )}
+                </div>
+                <div className="w-24">
+                  {editingProductId === product.id ? (
+                    <NumericInput
+                      min={0}
+                      step={1}
+                      value={editingPrice}
+                      placeholder="أدخل السعر"
+                      onChange={(v) => setEditingPrice(Math.max(0, v))}
+                      className="w-full min-h-[44px] rounded-lg border border-foreground-muted/20 bg-surface-page px-3 py-2 text-foreground placeholder-foreground-muted/50 transition-colors focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!canEdit || isSavingEdit}
+                    />
+                  ) : (
+                    <div className="text-foreground">{formatCurrency(product.price)}</div>
+                  )}
+                </div>
+                {editingProductId === product.id ? (
+                  <>
+                    <button
+                      onClick={handleSaveEdit}
+                      disabled={!canEdit || isSavingEdit}
+                      className="min-h-[44px] min-w-[44px] rounded-lg px-3 py-2 text-sm font-medium bg-primary text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      حفظ
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={!canEdit || isSavingEdit}
+                      className="min-h-[44px] min-w-[44px] rounded-lg px-3 py-2 text-sm font-medium border border-foreground-muted/20 text-foreground transition-colors hover:border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      إلغاء
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleStartEdit(product)}
+                      disabled={!canEdit || isAdding || isSavingEdit || isDeletingId !== null}
+                      className="min-h-[44px] min-w-[44px] rounded-lg px-3 py-2 text-sm font-medium bg-primary/10 text-primary transition-colors hover:bg-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      تعديل
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      disabled={!canEdit || isDeletingId === product.id || isAdding || isSavingEdit}
+                      className="min-h-[44px] min-w-[44px] rounded-lg px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDeletingId === product.id ? "جاري..." : "حذف"}
+                    </button>
+                  </>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </SectionCard>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          title="تأكيد الحذف"
+          message="هل أنت متأكد من حذف هذا المشروب؟ لا يمكن التراجع عن هذا الإجراء."
+          confirmLabel="حذف"
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+        />
+      )}
+    </div>
+  );
+}
