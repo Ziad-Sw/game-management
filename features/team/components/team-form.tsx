@@ -190,34 +190,33 @@ export default function TeamManagementForm({
         description="أدخل اسم الموظف وبريده الإلكتروني. النظام سيولّد معرّف دخول تلقائيًا."
       >
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
           <Input
             type="text"
             value={inviteDisplayName}
             onChange={(e) => setInviteDisplayName(e.target.value)}
             disabled={!canEdit}
+            className="sm:w-64"
             placeholder="اسم الموظف (اختياري)"
           />
-          <div className="flex gap-2">
-            <Input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleInvite(); }}
-              disabled={!canEdit}
-              className="flex-1"
-              placeholder="example@email.com"
-              dir="ltr"
-            />
-            <button
-              type="button"
-              onClick={handleInvite}
-              disabled={!canEdit || isInviting}
-              className="min-h-[44px] min-w-[100px] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isInviting ? "جاري..." : "تأكيد"}
-            </button>
-          </div>
+          <Input
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleInvite(); }}
+            disabled={!canEdit}
+            className="flex-1"
+            placeholder="example@email.com"
+            dir="ltr"
+          />
+          <button
+            type="button"
+            onClick={handleInvite}
+            disabled={!canEdit || isInviting}
+            className="min-h-[44px] min-w-[100px] rounded-lg bg-primary px-4 py-2 text-sm font-medium text-surface-page transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isInviting ? "جاري..." : "تأكيد"}
+          </button>
         </div>
       </SectionCard>
 
